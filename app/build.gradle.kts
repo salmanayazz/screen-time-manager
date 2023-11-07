@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace = "com.example.screen_time_manager"
-    compileSdk = 33
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.example.screen_time_manager"
