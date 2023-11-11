@@ -1,4 +1,4 @@
-package com.example.screen_time_manager
+package com.example.screentimemanager
 
 import android.app.ActivityManager
 import android.app.Notification
@@ -26,7 +26,6 @@ import java.util.SortedMap
 import java.util.Timer
 import java.util.TimerTask
 import java.util.TreeMap
-
 
 class AppUsageService : Service() {
     private val usageStatsManager by lazy { getSystemService(USAGE_STATS_SERVICE) as UsageStatsManager }
@@ -131,7 +130,7 @@ class AppUsageService : Service() {
             println("timeLimitIsReached: app usage ${appFound.totalTimeInForeground}")
             // return true if open longer than 1 sec and not this app itself
             // TODO: change this to use app specific limit
-            if (appFound.totalTimeInForeground > (1000) && appFound.packageName != "com.example.screen_time_manager") {
+            if (appFound.totalTimeInForeground > (1000) && appFound.packageName != this.packageName) {
                 return true;
             }
         } else {

@@ -1,4 +1,4 @@
-package com.example.screen_time_manager
+package com.example.screentimemanager
 
 import android.content.Intent
 import android.os.Bundle
@@ -8,7 +8,7 @@ import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
-import com.example.screen_time_manager.databinding.ActivityMainBinding
+import com.example.screentimemanager.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
 
