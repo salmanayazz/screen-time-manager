@@ -1,4 +1,4 @@
-package com.example.screen_time_manager
+package com.example.screentimemanager
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4

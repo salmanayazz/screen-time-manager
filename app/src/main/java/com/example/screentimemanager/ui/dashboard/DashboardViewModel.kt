@@ -1,4 +1,4 @@
-package com.example.screen_time_manager.ui.dashboard
+package com.example.screentimemanager.ui.dashboard
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
