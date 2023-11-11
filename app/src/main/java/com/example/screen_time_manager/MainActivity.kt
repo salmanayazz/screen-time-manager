@@ -33,8 +33,8 @@ class MainActivity : AppCompatActivity() {
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
 
-        //TODO: starting AppUsageService here temporarily
+        // start the AppUsageService
         val serviceIntent = Intent(this, AppUsageService::class.java)
-        startService(serviceIntent)
+        this.startForegroundService(serviceIntent)
     }
 }
