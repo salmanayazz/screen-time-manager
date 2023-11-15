@@ -17,7 +17,7 @@ class AppUsageRepository(private val exerciseDatabaseDao: AppUsageDatabaseDao) {
     }
     fun delete(id: Long){
         CoroutineScope(IO).launch {
-            exerciseDatabaseDao.deleteUsage(id)
+            //exerciseDatabaseDao.deleteUsage(id)
         }
     }
     fun deleteAll(){

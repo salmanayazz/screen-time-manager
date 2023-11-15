@@ -18,7 +18,7 @@ interface AppUsageDatabaseDao {
     @Query("DELETE FROM AppUsage")
     suspend fun deleteAllUsage()
 
-    @Query("DELETE FROM AppUsage WHERE applicationID = :key")
-    suspend fun deleteUsage(key: Long)
+//    @Query("DELETE FROM AppUsage WHERE applicationID = :key")
+//    suspend fun deleteUsage(key: Long)
 
 }
