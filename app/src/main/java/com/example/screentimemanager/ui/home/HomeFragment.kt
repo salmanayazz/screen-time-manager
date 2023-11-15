@@ -32,7 +32,7 @@ class HomeFragment : Fragment() {
         val appsList = context.packageManager.getInstalledApplications(PackageManager.GET_META_DATA)
         val mutableList:MutableList<String>  = mutableListOf()
         for (app in appsList){
-            if (app.flags and ApplicationInfo.FLAG_SYSTEM == 0) {
+            if (app.flags and  ApplicationInfo.FLAG_SYSTEM == 0) {
                 val appName = app.loadLabel(context.packageManager).toString()
                 if(appName.trim().isNotEmpty()){
                     mutableList.add(appName)
