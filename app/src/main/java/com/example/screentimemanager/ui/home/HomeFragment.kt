@@ -30,15 +30,13 @@ class HomeFragment : Fragment() {
 
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         val root: View = binding.root
-
-
 //        homeViewModel.text.observe(viewLifecycleOwner) {
 //            textView.text = it
 //        }
         val arrayAdapter: ArrayAdapter<*>
         val users = arrayOf(
             "Virat Kohli", "Rohit Sharma", "Steve Smith",
-            "Kane Williamson", "Ross Taylor", "Mohammad", "Mohammad","Mohammad","Mohammad", "Gurkirat", "Gurkirat", "Gurkirat"
+            "Kane Williamson", "Ross Taylor", "Mohammad", "Mohammad","Mohammad","Mohammad", "Gurkirat", "Gurkirat", "Gurkirat", "Gurkirat","Gurkirat","Gurkirat"
         )
 
         // access the listView from xml file
@@ -46,6 +44,7 @@ class HomeFragment : Fragment() {
         arrayAdapter = ArrayAdapter(requireContext(),
             android.R.layout.simple_list_item_1, users)
         mListView.adapter = arrayAdapter
+
         return root
     }
 
