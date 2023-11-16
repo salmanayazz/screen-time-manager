@@ -25,16 +25,22 @@ class FriendFragment : Fragment() {
         btnAddFriend = ret.findViewById(R.id.fab_addFriend)
         friendList = ret.findViewById(R.id.lv_friendList)
 
-        //temp. adapter
+        //friendList is to show the list of friends
+        //Haven't implemented the adapter yet, since the logic of getting the friend list from database is not done yet.
 //        val adapter = FriendListAdapter(requireActivity())
 //        friendList.adapter = adapter
 
+        //When clicked add friend button, if the user has signed in, it will show the AddFriendFragmentDialog
+        //Otherwise, it will show a dialog to tell the user to sign in.
+        //There will be a sign in button link to the sign in page.
+        //If the user click cancel, the dialog will be dismissed.
         btnAddFriend.setOnClickListener{
             if(friendViewModel.signedIn.value == false){
                 val dialog = AlertDialog.Builder(requireActivity())
                 dialog.setTitle(getString(R.string.sign_in_required))
                 dialog.setMessage(getString(R.string.sign_in_required_message))
                 dialog.setPositiveButton(getString(R.string.sign_in)){ _, _ ->
+                    //The button is not working yet, as the sign in page is not created yet.
                     //Intent to sign in page
                 }
                 dialog.setNegativeButton(getString(R.string.cancel)){_, _ ->

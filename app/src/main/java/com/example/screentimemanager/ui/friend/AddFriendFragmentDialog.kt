@@ -12,15 +12,19 @@ class AddFriendFragmentDialog : DialogFragment() {
         val inflater = requireActivity().layoutInflater
         val ret = inflater.inflate(R.layout.fragment_add_friend_dialog, null)
 
+        //return dialog
         return activity?.let{
             val builder = androidx.appcompat.app.AlertDialog.Builder(it)
             builder.setView(ret)
                 .setTitle(getString(R.string.add_friend))
+                //Users are not able to click outside of the dialog to cancel it
+                .setCancelable(false)
+                //Button to add friend
                 .setPositiveButton(getString(R.string.add)){ _, _ ->
-
+                    //Here will do the logic of adding friend into the database
                 }
                 .setNegativeButton(getString(R.string.cancel)){ _, _ ->
-
+                    dialog?.cancel() //Cancel the dialog
                 }
             builder.create()
         }?: throw IllegalStateException("Activity cannot be null")
