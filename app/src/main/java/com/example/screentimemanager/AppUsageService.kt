@@ -1,6 +1,5 @@
 package com.example.screentimemanager
 
-import android.app.ActivityManager
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -11,7 +10,6 @@ import android.content.ContentValues.TAG
 import android.content.Context
 import android.content.Intent
 import android.graphics.PixelFormat
-import android.os.Build.VERSION
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
@@ -19,7 +17,10 @@ import android.provider.Settings
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.WindowManager
-import kotlinx.coroutines.GlobalScope
+import com.example.screentimemanager.R
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import java.util.SortedMap
@@ -31,11 +32,18 @@ class AppUsageService : Service() {
     private val usageStatsManager by lazy { getSystemService(USAGE_STATS_SERVICE) as UsageStatsManager }
     private val overlayView by lazy { LayoutInflater.from(this).inflate(R.layout.time_limit_overlay, null) }
     private val windowManager by lazy { getSystemService(Context.WINDOW_SERVICE) as WindowManager }
+    private val serviceScope = CoroutineScope(Dispatchers.Main)
+
+    // record previously opened app and when it was opened
+    private var previousApp: String = ""
+    private var previousAppTimestamp: Long = 0L
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         requestPermissions()
-        startAppLimitTimer()
+        startAppTracking()
 
+        previousApp = getCurrentAppInUse()
+        previousAppTimestamp = System.currentTimeMillis()
 
         startForeground(
             1001,
@@ -43,9 +51,12 @@ class AppUsageService : Service() {
         )
         return super.onStartCommand(intent, flags, startId)
     }
+    
+    
 
     /**
      * requests the permissions needed for the service to work
+     * includes the usage access permission and the overlay permission
      */
     private fun requestPermissions() {
         if (!isUsageAccessPermissionGranted()) {
@@ -59,6 +70,75 @@ class AppUsageService : Service() {
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             startActivity(intent)
         }
+    }
+
+    /**
+     * tracker that checks if the time limit for the current app is reached continuously
+     * if the time limit is reached, it shows the overlay view
+     * if the time limit is not reached, it removes the overlay view
+     */
+    private fun startAppTracking() {
+        val timer = Timer()
+        val handler = Handler(Looper.getMainLooper())
+        
+        previousApp = getCurrentAppInUse()
+        previousAppTimestamp = System.currentTimeMillis()
+
+        serviceScope.launch {
+            // check if the current app limit has been reached every second
+            timer.scheduleAtFixedRate(object : TimerTask() {
+                override fun run() {
+                    if (timeLimitIsReached()) {
+                        handler.post {
+                            showOverlay()
+                        }
+                    } else {
+                        handler.post {
+                            removeOverlay()
+                        }
+                    }
+                }
+            }, 0, 1000)
+        }
+    }
+
+    /**
+     * checks if the time limit for the current app is reached
+     * @return true
+     * if the time limit for the current app is reached
+     */
+    private fun timeLimitIsReached(): Boolean {
+        val usageStatsList = getTodaysUsageStats()
+
+        var currentApp = getCurrentAppInUse()
+        var appUsage = usageStatsList.find() {
+            it.packageName == currentApp
+        }
+
+        if (appUsage != null) {
+            var totalTime = appUsage.totalTimeInForeground
+
+            // if app was already opened since last poll, use a timer to calculate
+            // its current usage since UsageStatsManager only updates its times when a user
+            // exits and reenters the app
+            if (previousApp == currentApp) {
+                totalTime +=  System.currentTimeMillis() - previousAppTimestamp
+            } else {
+                previousApp = currentApp
+                previousAppTimestamp = System.currentTimeMillis()
+            }
+
+            Log.i(TAG, "App $currentApp usage is $totalTime")
+
+            // TODO: remove this hardcoded (1000 * 20) value
+            if (totalTime > (1000 * 20) && appUsage.packageName != this.packageName) {
+                return true;
+            }
+        } else {
+            Log.e(TAG, "App $currentApp does not exist")
+        }
+
+        return false;
     }
 
     /**
@@ -79,81 +159,29 @@ class AppUsageService : Service() {
             .setContentTitle(getString(R.string.app_name) + " is running")
             .setSmallIcon(R.drawable.ic_launcher_background)
     }
-
+    
     /**
-     * timer that checks if the time limit for the current app is reached continuously
-     * if the time limit is reached, it shows the overlay view
-     * if the time limit is not reached, it removes the overlay view
+     * queries the UsageStatsManager for the usage statistics of the current day
+     * @return
+     * a list of UsageStats that contain app usage data
      */
-    private fun startAppLimitTimer() {  
-        val timer = Timer()
-        val handler = Handler(Looper.getMainLooper())
-
-        GlobalScope.launch {
-            // check if the current app limit has been reached every second
-            timer.scheduleAtFixedRate(object : TimerTask() {
-                override fun run() {
-                    if (timeLimitIsReached()) {
-                        handler.post {
-                            showOverlay()
-                        }
-                    } else {
-                        handler.post {
-                            removeOverlay()
-                        }
-                    }
-                }
-            }, 0, 1000)
-        }
-    }
-
-    /**
-     * checks if the time limit for the current app is reached
-     * @return true 
-     * if the time limit for the current app is reached
-     */
-    private fun timeLimitIsReached(): Boolean {
+    private fun getTodaysUsageStats(): List<UsageStats> {
         val currentTime = System.currentTimeMillis()
-        val startTime = getStartOfDay(currentTime)
-
-        // query the app usage statistics for the specified time range
-        val usageStatsList = usageStatsManager.queryUsageStats(
-            UsageStatsManager.INTERVAL_DAILY, startTime, currentTime
-        )
-
-        var curApp = getCurrentAppInUse()
-        var appFound = usageStatsList.find() {
-            it.packageName == curApp
-        }
-
-        if (appFound != null) {
-            println("timeLimitIsReached: app usage ${appFound.totalTimeInForeground}")
-            // return true if open longer than 1 sec and not this app itself
-            // TODO: change this to use app specific limit
-            if (appFound.totalTimeInForeground > (1000) && appFound.packageName != this.packageName) {
-                return true;
-            }
-        } else {
-            println("timeLimitIsReached: app does not exist")
-        }
-
-        return false;
-    }
-
-    /**
-     * @param timeMillis
-     * the time in milliseconds
-     * @return 
-     * the start of the day in milliseconds of the provided time
-     */
-    private fun getStartOfDay(timeMillis: Long): Long {
+        
+        // get time in milliseconds when today started
         val calendar = Calendar.getInstance()
-        calendar.timeInMillis = timeMillis
+        calendar.timeInMillis = currentTime
         calendar.set(Calendar.HOUR_OF_DAY, 0)
         calendar.set(Calendar.MINUTE, 0)
         calendar.set(Calendar.SECOND, 0)
         calendar.set(Calendar.MILLISECOND, 0)
-        return calendar.timeInMillis
+        val startTime = calendar.timeInMillis
+
+        // query the app usage statistics for the specified time range
+        return usageStatsManager.queryUsageStats(
+            UsageStatsManager.INTERVAL_DAILY, startTime, currentTime
+        )
+        
     }
 
     /**
@@ -163,17 +191,8 @@ class AppUsageService : Service() {
      * if the permissions are granted
      */
     private fun isUsageAccessPermissionGranted(): Boolean {
-        val currentTime = System.currentTimeMillis()
-        val startTime = getStartOfDay(currentTime)
-
-
-        val usageStatsList = usageStatsManager.queryUsageStats(
-            UsageStatsManager.INTERVAL_DAILY, startTime, currentTime
-        )
-
         // TODO: might not the best way to check if permission is given
-        return usageStatsList.isNotEmpty()
-
+        return getTodaysUsageStats().isNotEmpty()
     }
 
     /**
@@ -223,34 +242,25 @@ class AppUsageService : Service() {
      * https://stackoverflow.com/a/38829083
      */
     private fun getCurrentAppInUse(): String {
-        return if (VERSION.SDK_INT >= 21) {
-            var currentApp: String? = null
-            val usm = this.getSystemService(USAGE_STATS_SERVICE) as UsageStatsManager
-            val time = System.currentTimeMillis()
-            val appList = usm.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, time - 1000 * 1000, time)
-            if (appList != null && appList.size > 0) {
-                val mySortedMap: SortedMap<Long, UsageStats> = TreeMap()
-                for (usageStats in appList) {
-                    mySortedMap!![usageStats.lastTimeUsed] = usageStats
-                }
-                if (mySortedMap != null && !mySortedMap.isEmpty()) {
-                    currentApp = mySortedMap[mySortedMap.lastKey()]!!.packageName
-                }
+        var currentApp: String? = null
+        val usageStatsManager = this.getSystemService(USAGE_STATS_SERVICE) as UsageStatsManager
+        val time = System.currentTimeMillis()
+        val appList = usageStatsManager.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, time - 1000 * 1000, time)
+        if (appList != null && appList.size > 0) {
+            val sortedMap: SortedMap<Long, UsageStats> = TreeMap()
+            for (usageStats in appList) {
+                sortedMap!![usageStats.lastTimeUsed] = usageStats
             }
-            Log.e(TAG, "Current App in foreground is: $currentApp")
-            currentApp!!
-        } else {
-            val manager = getSystemService(ACTIVITY_SERVICE) as ActivityManager
-            val mm = manager.getRunningTasks(1)[0].topActivity!!.packageName
-            Log.e(TAG, "Current App in foreground is: $mm")
-            mm
+            if (sortedMap != null && !sortedMap.isEmpty()) {
+                currentApp = sortedMap[sortedMap.lastKey()]!!.packageName
+            }
         }
+        Log.i(TAG, "Current App in foreground is: $currentApp")
+        return currentApp!!
     }
 
     override fun onDestroy() {
-        // restarts the service if destroyed
-        val intent = Intent(this, AppUsageService::class.java)
-        startForegroundService(intent)
+        serviceScope.cancel()
         super.onDestroy()
     }
 }
