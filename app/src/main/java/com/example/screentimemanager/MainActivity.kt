@@ -8,6 +8,7 @@ import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
+import com.example.screentimemanager.appusage.AppUsageService
 import com.example.screentimemanager.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {

@@ -1,4 +1,4 @@
-package com.example.screentimemanager
+package com.example.screentimemanager.appusage
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -33,26 +33,31 @@ class AppUsageService : Service() {
     private val overlayView by lazy { LayoutInflater.from(this).inflate(R.layout.time_limit_overlay, null) }
     private val windowManager by lazy { getSystemService(Context.WINDOW_SERVICE) as WindowManager }
     private val serviceScope = CoroutineScope(Dispatchers.Main)
+    private var isServiceRunning = false
 
     // record previously opened app and when it was opened
     private var previousApp: String = ""
     private var previousAppTimestamp: Long = 0L
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        requestPermissions()
-        startAppTracking()
+        if (!isServiceRunning) {
+            isServiceRunning = true
 
-        previousApp = getCurrentAppInUse()
-        previousAppTimestamp = System.currentTimeMillis()
+            requestPermissions()
+            startAppTracking()
 
-        startForeground(
-            1001,
-            createForegroundNotification().build()
-        )
-        return super.onStartCommand(intent, flags, startId)
+            previousApp = getCurrentAppInUse()
+            previousAppTimestamp = System.currentTimeMillis()
+
+            startForeground(
+                1001,
+                createForegroundNotification().build()
+            )
+            return super.onStartCommand(intent, flags, startId)
+        }
+
+        return START_STICKY
     }
-    
-    
 
     /**
      * requests the permissions needed for the service to work
@@ -111,6 +116,8 @@ class AppUsageService : Service() {
         val usageStatsList = getTodaysUsageStats()
 
         var currentApp = getCurrentAppInUse()
+
+        // get usage details for currentApp
         var appUsage = usageStatsList.find() {
             it.packageName == currentApp
         }
@@ -260,6 +267,7 @@ class AppUsageService : Service() {
     }
 
     override fun onDestroy() {
+        // stop the app tracker
         serviceScope.cancel()
         super.onDestroy()
     }
