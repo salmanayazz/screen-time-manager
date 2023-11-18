@@ -4,8 +4,16 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 
 class FriendViewModel: ViewModel() {
-    val signedIn = MutableLiveData<Boolean>()
+    var signedIn = MutableLiveData<Boolean>()
+    var friends = MutableLiveData<ArrayList<Friend>>()
     init{
         signedIn.value = false
+        friends.value = ArrayList()
     }
+
+    //Add friend to friends
+    fun addFriend(friend: Friend){
+        friends.value?.add(friend)
+    }
+
 }
