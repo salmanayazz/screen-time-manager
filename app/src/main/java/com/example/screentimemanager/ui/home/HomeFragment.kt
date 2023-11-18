@@ -11,11 +11,14 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.ListView
+import android.widget.SearchView
+import android.widget.SearchView.OnQueryTextListener
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.example.screentimemanager.R
 import com.example.screentimemanager.databinding.FragmentHomeBinding
 import com.example.screentimemanager.ui.appSetting.AppSetting
+import com.example.screentimemanager.util.Util
 
 
 class HomeFragment : Fragment() {
@@ -31,20 +34,7 @@ class HomeFragment : Fragment() {
 
     private lateinit var applicationsAdapter: UserApplicationsAdapter
 
-    fun getApplicationsList (context: Context): List<ApplicationInfo>{
-        //TODO : this function is time consuming , it needs to be done inside a coroutines NOT UI threads
-        val appsList = context.packageManager.getInstalledApplications(PackageManager.GET_META_DATA)
-        val mutableList:MutableList<ApplicationInfo>  = mutableListOf()
-        for (app in appsList){
-            if (app.flags and  ApplicationInfo.FLAG_SYSTEM == 0) {
-                val appName = app.loadLabel(context.packageManager).toString()
-                if(appName.trim().isNotEmpty()){
-                    mutableList.add(app)
-                }
-            }
-        }
-        return mutableList
-    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -59,9 +49,9 @@ class HomeFragment : Fragment() {
         /* getting all users applications installed on their phone
         and show all the users apps using listview and custom adapter
          */
-        val users = getApplicationsList(requireContext())
+        val apps = Util.getApplicationsList(requireContext())
         var appListView = root.findViewById<ListView>(R.id.app_lists)
-        applicationsAdapter = UserApplicationsAdapter(requireContext(),users)
+        applicationsAdapter = UserApplicationsAdapter(requireContext(),apps)
         appListView.adapter = applicationsAdapter
 
         /*
@@ -73,6 +63,22 @@ class HomeFragment : Fragment() {
             val selectedApplication: ApplicationInfo = applicationsAdapter.getItem(position)
             startActivity(intent)
         }
+        /*
+        setting the functionality of the search widget to filter applications
+
+        var searchView: SearchView = root.findViewById(R.id.search_text)
+        searchView.setOnQueryTextListener(object : OnQueryTextListener {
+            override fun onQueryTextChange(newText: String): Boolean {
+                return false
+            }
+            override fun onQueryTextSubmit(query: String): Boolean {
+                searchView.clearFocus()
+                if (apps.contains(query)){
+                    applicationsAdapter.filter.filter(query)
+                }
+                return false
+            }
+        })*/
 
         return root
     }
