@@ -1,23 +1,20 @@
 package com.example.screentimemanager.ui.home
 
-import android.content.Context
 import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ArrayAdapter
 import android.widget.ListView
 import android.widget.SearchView
-import android.widget.SearchView.OnQueryTextListener
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.example.screentimemanager.R
 import com.example.screentimemanager.databinding.FragmentHomeBinding
 import com.example.screentimemanager.ui.appSetting.AppSetting
+import com.example.screentimemanager.util.UserApplicationsAdapter
 import com.example.screentimemanager.util.Util
 
 

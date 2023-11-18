@@ -5,15 +5,15 @@ import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 
 object Util {
+
+
+    /**
+     * Returns a list of non-system applications installed on the user's phone.
+     *
+     * @param context The context of the application or activity.
+     * @return A list of ApplicationInfo objects representing user-installed applications.
+     */
     fun getApplicationsList (context: Context): List<ApplicationInfo>{
-
-        /**
-         * Returns a list of non-system applications installed on the user's phone.
-         *
-         * @param context The context of the application or activity.
-         * @return A list of ApplicationInfo objects representing user-installed applications.
-         */
-
         //TODO : this function is time consuming , it needs to be done inside a coroutines NOT UI threads
         val appsList = context.packageManager.getInstalledApplications(PackageManager.GET_META_DATA)
         val mutableList:MutableList<ApplicationInfo>  = mutableListOf()
