@@ -70,11 +70,16 @@ class AppUsageService : Service() {
             startActivity(intent)
         }
 
+        // loop to block service until permissions accepted
+        while (!isUsageAccessPermissionGranted()) {}
+
         if (!Settings.canDrawOverlays(this)) {
             val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION)
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             startActivity(intent)
         }
+
+        while (!Settings.canDrawOverlays(this)) {}
     }
 
     /**
