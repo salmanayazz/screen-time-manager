@@ -20,7 +20,9 @@ class FriendListAdapter(private var context: Context, @LayoutRes private val lay
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
         val friend = array[position]
         val ret = LayoutInflater.from(context).inflate(R.layout.layout_friend_list, parent, false)
+        //Image view to show the friend's profile picture
         imgProfile = ret.findViewById(R.id.img_friend_profile_pics)
+        //Text view to show the friend's first name + last name
         tvName = ret.findViewById(R.id.tv_friend_username)
         if(friend.profilePic != null){
             imgProfile.setImageBitmap(friend.profilePic)

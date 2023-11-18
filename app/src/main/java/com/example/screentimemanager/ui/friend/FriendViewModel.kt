@@ -14,6 +14,8 @@ class FriendViewModel: ViewModel() {
     //Add friend to friends
     fun addFriend(friend: Friend){
         friends.value?.add(friend)
+        //Forced the VM to notice the change
+        friends.value = friends.value
     }
 
 }
