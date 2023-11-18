@@ -14,7 +14,7 @@ class UserApplicationsAdapter(private val context: Context, private var userApps
         return userAppsList.size
     }
 
-    override fun getItem(position: Int): Any {
+    override fun getItem(position: Int): ApplicationInfo {
         return userAppsList[position]
     }
 

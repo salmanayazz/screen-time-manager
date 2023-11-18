@@ -1,6 +1,7 @@
 package com.example.screentimemanager.ui.home
 
 import android.content.Context
+import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.os.Bundle
@@ -14,6 +15,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.example.screentimemanager.R
 import com.example.screentimemanager.databinding.FragmentHomeBinding
+import com.example.screentimemanager.ui.appSetting.AppSetting
 
 
 class HomeFragment : Fragment() {
@@ -30,6 +32,7 @@ class HomeFragment : Fragment() {
     private lateinit var applicationsAdapter: UserApplicationsAdapter
 
     fun getApplicationsList (context: Context): List<ApplicationInfo>{
+        //TODO : this function is time consuming , it needs to be done inside a coroutines NOT UI threads
         val appsList = context.packageManager.getInstalledApplications(PackageManager.GET_META_DATA)
         val mutableList:MutableList<ApplicationInfo>  = mutableListOf()
         for (app in appsList){
@@ -52,11 +55,25 @@ class HomeFragment : Fragment() {
 
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         val root: View = binding.root
+
+        /* getting all users applications installed on their phone
+        and show all the users apps using listview and custom adapter
+         */
         val users = getApplicationsList(requireContext())
-        // access the listView from xml file
-        var mListView = root.findViewById<ListView>(R.id.app_lists)
+        var appListView = root.findViewById<ListView>(R.id.app_lists)
         applicationsAdapter = UserApplicationsAdapter(requireContext(),users)
-        mListView.adapter = applicationsAdapter
+        appListView.adapter = applicationsAdapter
+
+        /*
+        setting the clicker for each item in application listview, which
+        opens the appSetting activity for the clicked application.
+         */
+        appListView.setOnItemClickListener(){_, _, position, _ ->
+            val intent: Intent = Intent(activity,AppSetting::class.java)
+            val selectedApplication: ApplicationInfo = applicationsAdapter.getItem(position)
+            startActivity(intent)
+        }
+
         return root
     }
 
