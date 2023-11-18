@@ -4,6 +4,7 @@ import android.app.Dialog
 import android.os.Bundle
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.FragmentManager
+import androidx.lifecycle.ViewModelProvider
 import com.example.screentimemanager.R
 
 const val ADD_FRIEND_DIALOG_TAG = "Add Friend Fragment Dialog"
@@ -11,6 +12,7 @@ class AddFriendFragmentDialog : DialogFragment() {
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val inflater = requireActivity().layoutInflater
         val ret = inflater.inflate(R.layout.fragment_add_friend_dialog, null)
+        val friendViewModel = ViewModelProvider(requireActivity()).get(FriendViewModel::class.java)
 
         //return dialog
         return activity?.let{
@@ -21,10 +23,13 @@ class AddFriendFragmentDialog : DialogFragment() {
                 .setCancelable(false)
                 //Button to add friend
                 .setPositiveButton(getString(R.string.add)){ _, _ ->
-                    //Here will do the logic of adding friend into the database
+                    //Add friend to the list
+                    //Hard coded the name for now
+                    friendViewModel.addFriend(Friend("Smith", "Chan", null))
                 }
                 .setNegativeButton(getString(R.string.cancel)){ _, _ ->
-                    dialog?.cancel() //Cancel the dialog
+                    //Cancel the dialog
+                    dialog?.cancel()
                 }
             builder.create()
         }?: throw IllegalStateException("Activity cannot be null")
