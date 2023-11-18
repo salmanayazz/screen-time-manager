@@ -15,20 +15,27 @@ class FriendFragment : Fragment() {
     private lateinit var btnAddFriend: FloatingActionButton
     private lateinit var friendList: ListView
     private lateinit var friendViewModel: FriendViewModel
+    private lateinit var friends: ArrayList<Friend>
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        friends = ArrayList()
+        val adapter = FriendListAdapter(requireActivity(), R.layout.layout_friend_list, friends)
         val ret = inflater.inflate(R.layout.fragment_friend, container, false)
         friendViewModel = ViewModelProvider(requireActivity()).get(FriendViewModel::class.java)
         btnAddFriend = ret.findViewById(R.id.fab_addFriend)
         friendList = ret.findViewById(R.id.lv_friendList)
 
-        //friendList is to show the list of friends
-        //Haven't implemented the adapter yet, since the logic of getting the friend list from database is not done yet.
-//        val adapter = FriendListAdapter(requireActivity())
-//        friendList.adapter = adapter
+        //friendList is to show the list view to list out friends
+        friendList.adapter = adapter
+
+        friendViewModel.friends.observe(requireActivity()){
+            adapter.clear()
+            adapter.addAll(it)
+            friendList.adapter = adapter
+        }
 
         //When clicked add friend button, if the user has signed in, it will show the AddFriendFragmentDialog
         //Otherwise, it will show a dialog to tell the user to sign in.
@@ -42,6 +49,7 @@ class FriendFragment : Fragment() {
                 dialog.setPositiveButton(getString(R.string.sign_in)){ _, _ ->
                     //The button is not working yet, as the sign in page is not created yet.
                     //Intent to sign in page
+                    friendViewModel.signedIn.value = true
                 }
                 dialog.setNegativeButton(getString(R.string.cancel)){_, _ ->
 
