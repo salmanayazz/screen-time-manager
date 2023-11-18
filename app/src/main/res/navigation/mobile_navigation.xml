@@ -22,4 +22,10 @@
         android:name="com.example.screentimemanager.ui.notifications.NotificationsFragment"
         android:label="@string/title_notifications"
         tools:layout="@layout/fragment_notifications" />
+
+    <fragment
+        android:id="@+id/navigation_friend"
+        android:name="com.example.screentimemanager.ui.friend.FriendFragment"
+        android:label="@string/title_friends"
+        tools:layout="@layout/fragment_friend" />
 </navigation>
