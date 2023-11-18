@@ -6,7 +6,7 @@ import android.content.pm.PackageManager
 
 object Util {
     fun getApplicationsList (context: Context): List<ApplicationInfo>{
-        
+
         /**
          * Returns a list of non-system applications installed on the user's phone.
          *

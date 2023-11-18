@@ -63,23 +63,22 @@ class HomeFragment : Fragment() {
             val selectedApplication: ApplicationInfo = applicationsAdapter.getItem(position)
             startActivity(intent)
         }
+
         /*
         setting the functionality of the search widget to filter applications
-
+         */
         var searchView: SearchView = root.findViewById(R.id.search_text)
-        searchView.setOnQueryTextListener(object : OnQueryTextListener {
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextChange(newText: String): Boolean {
+                // Handle text changes here if needed
+                applicationsAdapter.filter.filter(newText)
                 return false
             }
             override fun onQueryTextSubmit(query: String): Boolean {
                 searchView.clearFocus()
-                if (apps.contains(query)){
-                    applicationsAdapter.filter.filter(query)
-                }
                 return false
             }
-        })*/
-
+        })
         return root
     }
 
