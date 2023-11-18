@@ -27,18 +27,17 @@ class HomeFragment : Fragment() {
     // onDestroyView.
     private val binding get() = _binding!!
 
+    private lateinit var applicationsAdapter: UserApplicationsAdapter
 
-    fun getApplicationsList (context: Context): List<String>{
+    fun getApplicationsList (context: Context): List<ApplicationInfo>{
         val appsList = context.packageManager.getInstalledApplications(PackageManager.GET_META_DATA)
-        val mutableList:MutableList<String>  = mutableListOf()
+        val mutableList:MutableList<ApplicationInfo>  = mutableListOf()
         for (app in appsList){
             if (app.flags and  ApplicationInfo.FLAG_SYSTEM == 0) {
                 val appName = app.loadLabel(context.packageManager).toString()
                 if(appName.trim().isNotEmpty()){
-                    mutableList.add(appName)
+                    mutableList.add(app)
                 }
-
-                println("the app name is ${appName}")
             }
         }
         return mutableList
@@ -53,13 +52,11 @@ class HomeFragment : Fragment() {
 
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         val root: View = binding.root
-        val arrayAdapter: ArrayAdapter<*>
         val users = getApplicationsList(requireContext())
         // access the listView from xml file
         var mListView = root.findViewById<ListView>(R.id.app_lists)
-        arrayAdapter = ArrayAdapter(requireContext(),
-            android.R.layout.simple_list_item_1, users)
-        mListView.adapter = arrayAdapter
+        applicationsAdapter = UserApplicationsAdapter(requireContext(),users)
+        mListView.adapter = applicationsAdapter
         return root
     }
 
