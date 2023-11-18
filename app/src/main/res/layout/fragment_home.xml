@@ -7,22 +7,24 @@
     android:orientation="vertical"
     tools:context=".ui.home.HomeFragment">
 
-    <EditText
+    <SearchView
         android:id="@+id/search_text"
         android:layout_width="match_parent"
         android:layout_marginHorizontal="30dp"
         android:layout_height="wrap_content"
-        android:hint="Search for an app.."
-        android:layout_marginTop="15dp"
-        android:drawablePadding="5dp"
+        android:queryHint="Search for an app.."
+        android:clickable="true"
+        android:iconifiedByDefault="false"
+        android:layout_marginTop="5dp"
         android:layout_centerHorizontal="true"
-        android:drawableLeft="@drawable/baseline_search_24" />
+        android:background="@drawable/search_view_shape"
+        />
 
     <ListView
         android:id="@+id/app_lists"
-        android:layout_marginTop="20dp"
+        android:layout_margin="25dp"
         android:layout_below="@id/search_text"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-    </ListView>
+        android:layout_height="wrap_content"
+        android:paddingBottom="30dp"/>
 </RelativeLayout>
