@@ -20,8 +20,10 @@ import android.view.WindowManager
 import com.example.screentimemanager.R
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import java.util.Calendar
 import java.util.SortedMap
 import java.util.Timer
@@ -36,18 +38,20 @@ class AppUsageService : Service() {
     private var isServiceRunning = false
 
     // record previously opened app and when it was opened
-    private var previousApp: String = ""
+    private var previousApp: String? = null
     private var previousAppTimestamp: Long = 0L
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (!isServiceRunning) {
             isServiceRunning = true
 
-            requestPermissions()
-            startAppTracking()
+            CoroutineScope(IO).launch {
+                requestPermissions()
+                startAppTracking()
 
-            previousApp = getCurrentAppInUse()
-            previousAppTimestamp = System.currentTimeMillis()
+                previousApp = getCurrentAppInUse()
+                previousAppTimestamp = System.currentTimeMillis()
+            }
 
             startForeground(
                 1001,
@@ -64,6 +68,7 @@ class AppUsageService : Service() {
      * includes the usage access permission and the overlay permission
      */
     private fun requestPermissions() {
+
         if (!isUsageAccessPermissionGranted()) {
             val intent = Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -71,15 +76,19 @@ class AppUsageService : Service() {
         }
 
         // loop to block service until permissions accepted
-        while (!isUsageAccessPermissionGranted()) {}
+        while (!isUsageAccessPermissionGranted()) {
+            Thread.sleep(1000)
+        }
 
-        if (!Settings.canDrawOverlays(this)) {
+        if (!Settings.canDrawOverlays(applicationContext)) {
             val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION)
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             startActivity(intent)
         }
 
-        while (!Settings.canDrawOverlays(this)) {}
+        while (!Settings.canDrawOverlays(applicationContext)) {
+            Thread.sleep(1000)
+        }
     }
 
     /**
@@ -255,7 +264,6 @@ class AppUsageService : Service() {
      */
     private fun getCurrentAppInUse(): String {
         var currentApp: String? = null
-        val usageStatsManager = this.getSystemService(USAGE_STATS_SERVICE) as UsageStatsManager
         val time = System.currentTimeMillis()
         val appList = usageStatsManager.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, time - 1000 * 1000, time)
         if (appList != null && appList.size > 0) {
