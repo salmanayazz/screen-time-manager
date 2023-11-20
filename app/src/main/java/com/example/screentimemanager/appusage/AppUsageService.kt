@@ -1,5 +1,6 @@
 package com.example.screentimemanager.appusage
 
+import android.Manifest
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -9,7 +10,10 @@ import android.app.usage.UsageStatsManager
 import android.content.ContentValues.TAG
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
+import android.content.pm.PackageManager
 import android.graphics.PixelFormat
+import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
@@ -23,12 +27,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import java.util.Calendar
 import java.util.SortedMap
 import java.util.Timer
 import java.util.TimerTask
 import java.util.TreeMap
+
 
 class AppUsageService : Service() {
     private val usageStatsManager by lazy { getSystemService(USAGE_STATS_SERVICE) as UsageStatsManager }
@@ -45,13 +49,12 @@ class AppUsageService : Service() {
         if (!isServiceRunning) {
             isServiceRunning = true
 
-            CoroutineScope(IO).launch {
-                requestPermissions()
-                startAppTracking()
+            requestPermissions()
+            startAppTracking()
 
-                previousApp = getCurrentAppInUse()
-                previousAppTimestamp = System.currentTimeMillis()
-            }
+            previousApp = getCurrentAppInUse()
+            previousAppTimestamp = System.currentTimeMillis()
+
 
             startForeground(
                 1001,
@@ -68,26 +71,17 @@ class AppUsageService : Service() {
      * includes the usage access permission and the overlay permission
      */
     private fun requestPermissions() {
-
         if (!isUsageAccessPermissionGranted()) {
-            val intent = Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)
+            var intent = Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             startActivity(intent)
         }
 
-        // loop to block service until permissions accepted
-        while (!isUsageAccessPermissionGranted()) {
-            Thread.sleep(1000)
-        }
 
-        if (!Settings.canDrawOverlays(applicationContext)) {
+        if (!Settings.canDrawOverlays(this)) {
             val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION)
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             startActivity(intent)
-        }
-
-        while (!Settings.canDrawOverlays(applicationContext)) {
-            Thread.sleep(1000)
         }
     }
 
@@ -152,7 +146,7 @@ class AppUsageService : Service() {
             Log.i(TAG, "App $currentApp usage is $totalTime")
 
             // TODO: remove this hardcoded (1000 * 20) value
-            if (totalTime > (1000 * 20) && appUsage.packageName != this.packageName) {
+            if (totalTime > (1000 * 5) && appUsage.packageName != this.packageName) {
                 return true;
             }
         } else {
@@ -206,13 +200,16 @@ class AppUsageService : Service() {
     }
 
     /**
-     * queries the UsageStatsManager for the usage statistics of the current day
-     * if the list is empty, it expects the the permissions to not be granted
+     * checks if the usage access permission is granted
      * @return true
      * if the permissions are granted
      */
     private fun isUsageAccessPermissionGranted(): Boolean {
-        // TODO: might not the best way to check if permission is given
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            return this.checkSelfPermission(Manifest.permission.PACKAGE_USAGE_STATS) ==
+                    PackageManager.PERMISSION_GRANTED &&
+                    getTodaysUsageStats().isNotEmpty();
+        }
         return getTodaysUsageStats().isNotEmpty()
     }
 
@@ -262,21 +259,21 @@ class AppUsageService : Service() {
      * reference:
      * https://stackoverflow.com/a/38829083
      */
-    private fun getCurrentAppInUse(): String {
+    private fun getCurrentAppInUse(): String? {
         var currentApp: String? = null
         val time = System.currentTimeMillis()
         val appList = usageStatsManager.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, time - 1000 * 1000, time)
         if (appList != null && appList.size > 0) {
             val sortedMap: SortedMap<Long, UsageStats> = TreeMap()
             for (usageStats in appList) {
-                sortedMap!![usageStats.lastTimeUsed] = usageStats
+                sortedMap[usageStats.lastTimeUsed] = usageStats
             }
-            if (sortedMap != null && !sortedMap.isEmpty()) {
+            if (!sortedMap.isEmpty()) {
                 currentApp = sortedMap[sortedMap.lastKey()]!!.packageName
             }
         }
         Log.i(TAG, "Current App in foreground is: $currentApp")
-        return currentApp!!
+        return currentApp
     }
 
     override fun onDestroy() {
