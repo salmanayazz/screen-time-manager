@@ -1,4 +1,4 @@
-name: build
+name: Build
 
 on:
   push: 
@@ -11,20 +11,23 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+    - name: Checkout code
+      uses: actions/checkout@v2
 
-      - name: Set up JDK and Gradle
-        uses: actions/setup-java@v2
-        with:
-          java-version: '17'
-          distribution: 'adopt'
-          cache: gradle
+    - name: Set up JDK and Gradle
+      uses: actions/setup-java@v2
+      with:
+        java-version: '17'
+        distribution: 'adopt'
+        cache: gradle
 
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
 
-      - name: Build and test
-        run: |
-          ./gradlew clean assembleDebug
-          ./gradlew testDebug
+    - name: Add google-services.json
+      run: echo ${{ secrets.GOOGLE_SERVICES_JSON }} > app/google-services.json
+
+    - name: Build and test
+      run: |
+        ./gradlew clean assembleDebug
+        ./gradlew testDebug
