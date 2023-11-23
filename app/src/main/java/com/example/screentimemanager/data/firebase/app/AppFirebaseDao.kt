@@ -28,7 +28,8 @@ class AppFirebaseDao(
     }
 
     /**
-     * enables/disables time limiting and sets the amount
+     * enables/disables time limiting and sets the amount. 
+     * if app entry does not exist, it will be created
      * @param app
      * the app to change the limit for
      * @param hasLimit

@@ -19,6 +19,8 @@ class UsageFirebaseDao(
     }
 
     /**
+     * sets the usage data for the given app on the given date
+     * if the usage data already exists, it will be overwritten
      * @param appName
      * the app to add to the user's list of apps
      */
