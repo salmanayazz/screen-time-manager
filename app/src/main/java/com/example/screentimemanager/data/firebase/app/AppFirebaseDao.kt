@@ -6,6 +6,8 @@ import com.google.firebase.database.DatabaseReference
 class AppFirebaseDao(
     private val database: DatabaseReference
 ) {
+    // use database.child.("apps").child(userEmail).child(appName) to query firebase
+
     /**
      * @param appName
      * the app to add to the user's list of apps

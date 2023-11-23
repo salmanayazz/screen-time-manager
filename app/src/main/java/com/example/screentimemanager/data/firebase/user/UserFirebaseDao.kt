@@ -5,6 +5,8 @@ import com.google.firebase.database.DatabaseReference
 class UserFirebaseDao(
     private val database: DatabaseReference
 ) {
+    // use database.child.("users").child(userEmail) to query firebase
+
     /**
      * @param email
      * @return

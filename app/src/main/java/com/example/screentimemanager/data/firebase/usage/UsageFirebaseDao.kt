@@ -6,6 +6,8 @@ import com.google.firebase.database.DatabaseReference
 class UsageFirebaseDao(
     private val database: DatabaseReference
 ) {
+    // use database.child.("usages").child(userEmail).child(appName).child("$day/$month/$year") to query firebase
+
     /**
      * @param email
      * email of the user whose usage data is being retrieved

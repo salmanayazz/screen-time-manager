@@ -6,6 +6,9 @@ import com.google.firebase.database.DatabaseReference
 class FriendFirebaseDao(
     private val database: DatabaseReference
 ) {
+
+    // use database.child.("friends") to query firebase
+
     /**
      * @return
      * return list of the user's friends
