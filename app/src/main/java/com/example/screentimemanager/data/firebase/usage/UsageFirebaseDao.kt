@@ -9,12 +9,19 @@ class UsageFirebaseDao(
     // use database.child.("usages").child(userEmail).child(appName).child("$day/$month/$year") to query firebase
 
     /**
+     * returns for usage data for the given user on the given date
      * @param email
      * email of the user whose usage data is being retrieved
+     * @param day
+     * the day of the month
+     * @param month
+     * the month of the year
+     * @param year
+     * the year
      * @return  
      * return list of the user's usage data
      */
-    suspend fun getUsageData(email: String): List<UsageFirebase> {
+    suspend fun getUsageData(email: String, day: Int, month: Int, year: Int): List<UsageFirebase> {
         return listOf()
     }
 
