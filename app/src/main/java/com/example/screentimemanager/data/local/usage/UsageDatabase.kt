@@ -15,7 +15,7 @@ abstract class UsageDatabase: RoomDatabase() {
          * returns the singleton instance of the database
          * @param context
          * the context of the application
-         * @return AppDatabase
+         * @return UsageDatabase
          * the singleton instance of the database
          */
         fun getInstance(context: Context) : UsageDatabase {
