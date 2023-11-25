@@ -28,7 +28,7 @@ class AppRepository (
      * @return
      * the time limit in milliseconds
      */
-    suspend fun getAppLimit(appName: String): Long? {
+    fun getAppLimit(appName: String): Long? {
         return appDao.getAppLimit(appName)
     }
 

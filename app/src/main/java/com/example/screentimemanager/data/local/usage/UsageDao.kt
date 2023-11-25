@@ -1,7 +1,9 @@
 package com.example.screentimemanager.data.local.usage
 
+import androidx.room.Dao
 import androidx.room.Query
 
+@Dao
 interface UsageDao {
     /**
      * @return

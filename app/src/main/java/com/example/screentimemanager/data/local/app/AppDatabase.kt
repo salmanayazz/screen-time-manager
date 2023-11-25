@@ -1,9 +1,12 @@
 package com.example.screentimemanager.data.local.app
 
 import android.content.Context
+import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import com.example.screentimemanager.data.local.usage.Usage
 
+@Database(entities = [App::class], version = 1)
 abstract class AppDatabase: RoomDatabase() {
     abstract val appDao: AppDao
 
