@@ -19,7 +19,7 @@ interface AppDao {
      * the time limit in milliseconds
      */
     @Query("SELECT timeLimit FROM App WHERE appName = :appName")
-    suspend fun getAppLimit(appName: String): Long
+    suspend fun getAppLimit(appName: String): Long?
 
     /**
      * enables/disables time limiting and sets the amount.
