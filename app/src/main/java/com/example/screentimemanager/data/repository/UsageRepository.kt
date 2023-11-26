@@ -25,7 +25,7 @@ class UsageRepository(
      * @return
      * return list of the user's usage data
      */
-    suspend fun getUsageData(day: Int, month: Int, year: Int) : List<Usage> {
+    fun getUsageData(day: Int, month: Int, year: Int) : List<Usage> {
         return usageDao.getUsageData(day, month, year)
     }
 
@@ -42,17 +42,28 @@ class UsageRepository(
      * @return
      * return list of the user's usage data
      */
-    suspend fun getUsageData(email: String, day: Int, month: Int, year: Int): List<UsageFirebase> {
+    fun getUsageData(email: String, day: Int, month: Int, year: Int): List<UsageFirebase> {
         return usageFirebaseDao.getUsageData(email, day, month, year)
     }
 
     /**
+     * sets the usage data for the given user on the given date
+     * if usage data already exists, it will be replaced
      * @param appName
      * the app to add to the user's list of apps
+     * @param day
+     * the day of the month
+     * @param month
+     * the month of the year
+     * @param year
+     * the year
+     * @param usage
+     * the usage time in milliseconds
      */
-    suspend fun setUsageData(appName: String, date: String, usage: Long) {
+    suspend fun setUsageData(appName: String, day: Int, month: Int, year: Int, usage: Long) {
         CoroutineScope(Dispatchers.IO).launch {
-            usageFirebaseDao.setUsageData(appName, date, usage)
+            usageDao.setUsageData(appName, day, month, year, usage)
+            usageFirebaseDao.setUsageData(appName, day, month, year, usage)
         }
     }
 }
