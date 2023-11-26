@@ -10,8 +10,18 @@ interface AppDao {
      * @param appName
      * the app to add to the user's list of apps
      */
-    @Query("INSERT INTO App (appName) VALUES (:appName)")
+    @Query("INSERT OR IGNORE INTO App (appName, hasLimit, timeLimit) VALUES (:appName, 0, 0)")
     suspend fun addApp(appName: String)
+
+    /**
+     * gets the time limit for the app
+     * @param appName
+     * the app to get the limit for
+     * @return
+     * the time limit in milliseconds
+     */
+    @Query("SELECT * FROM App WHERE appName = :appName")
+    fun getApp(appName: String): App?
 
     /**
      * gets the time limit for the app

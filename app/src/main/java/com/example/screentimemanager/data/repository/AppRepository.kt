@@ -1,6 +1,7 @@
 package com.example.screentimemanager.data.repository
 
 import com.example.screentimemanager.data.firebase.app.AppFirebaseDao
+import com.example.screentimemanager.data.local.app.App
 import com.example.screentimemanager.data.local.app.AppDao
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -15,10 +16,12 @@ class AppRepository (
      * the app to add to the user's list of apps
      */
     suspend fun addApp(appName: String) {
-        CoroutineScope(Dispatchers.IO).launch {
-            appDao.addApp(appName)
-            appFirebaseDao.addApp(appName)
-        }
+        appDao.addApp(appName)
+        appFirebaseDao.addApp(appName)
+    }
+
+    fun getApp(appName: String): App? {
+        return appDao.getApp(appName)
     }
 
     /**

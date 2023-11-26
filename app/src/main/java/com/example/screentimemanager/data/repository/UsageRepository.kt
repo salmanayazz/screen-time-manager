@@ -25,7 +25,7 @@ class UsageRepository(
      * @return
      * return list of the user's usage data
      */
-    suspend fun getUsageData(day: Int, month: Int, year: Int) : List<Usage> {
+    fun getUsageData(day: Int, month: Int, year: Int) : List<Usage> {
         return usageDao.getUsageData(day, month, year)
     }
 
@@ -62,6 +62,7 @@ class UsageRepository(
      */
     suspend fun setUsageData(appName: String, day: Int, month: Int, year: Int, usage: Long) {
         CoroutineScope(Dispatchers.IO).launch {
+            usageDao.setUsageData(appName, day, month, year, usage)
             usageFirebaseDao.setUsageData(appName, day, month, year, usage)
         }
     }

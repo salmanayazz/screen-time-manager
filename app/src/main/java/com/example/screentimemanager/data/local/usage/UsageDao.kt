@@ -1,6 +1,8 @@
 package com.example.screentimemanager.data.local.usage
 
 import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 
 @Dao
@@ -10,7 +12,7 @@ interface UsageDao {
      * return list of the user's usage data
      */
     @Query("SELECT * FROM Usage WHERE day = :day AND month = :month AND year = :year")
-    suspend fun getUsageData(day: Int, month: Int, year: Int): List<Usage>
+    fun getUsageData(day: Int, month: Int, year: Int): List<Usage>
 
     /**
      * sets the usage data for the given app on the given date

@@ -21,14 +21,16 @@ import com.example.screentimemanager.data.local.app.App
 @Entity(
     tableName = "Usage",
     primaryKeys = ["appName", "day", "month", "year"],
-    foreignKeys = [
-        ForeignKey(
-            entity = App::class,
-            parentColumns = ["appName"],
-            childColumns = ["appName"],
-            onDelete = ForeignKey.CASCADE
-        )
-    ]
+    // TODO: seems to cause a "FOREIGN KEY constraint failed" even when an App entry with given appName exists
+//    foreignKeys = [
+//        ForeignKey(
+//            entity = App::class,
+//            parentColumns = ["appName"],
+//            childColumns = ["appName"],
+//            onDelete = ForeignKey.CASCADE,
+//            onUpdate = ForeignKey.CASCADE
+//        )
+//    ]
 )
 data class Usage(
     val appName: String,
