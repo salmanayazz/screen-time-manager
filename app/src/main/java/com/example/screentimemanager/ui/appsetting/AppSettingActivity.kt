@@ -14,7 +14,6 @@ import com.example.screentimemanager.data.local.app.AppDatabase
 import com.example.screentimemanager.data.local.usage.UsageDatabase
 import com.example.screentimemanager.data.repository.AppRepository
 import com.example.screentimemanager.data.repository.UsageRepository
-import com.example.screentimemanager.ui.appsetting.AppSettingViewModel
 import com.example.screentimemanager.util.Compat.getParcelableExtraCompat
 import com.google.android.material.switchmaterial.SwitchMaterial
 import com.google.firebase.database.FirebaseDatabase
@@ -45,15 +44,14 @@ class AppSettingActivity : AppCompatActivity() {
         // getting the application clicked
         application = intent.getParcelableExtraCompat(APPLICATION_INFO, ApplicationInfo::class.java)
 
-        if (application == null) {
-            println("application is null")
-        }
-
         setupMVVM()
         setupUI()
         setupListeners()
     }
 
+    /**
+     * sets up the view model
+     */
     private fun setupMVVM() {
             val appDatabase = AppDatabase.getInstance(this)
             val firebaseDatabase = FirebaseDatabase.getInstance()
@@ -66,12 +64,17 @@ class AppSettingActivity : AppCompatActivity() {
             val usageDao = usageDatabase.usageDao
             val usageRepository = UsageRepository(usageFirebaseDao, usageDao)
             val appSettingViewModelFactory = AppSettingViewModelFactory(appRepository, usageRepository)
+
+            // create the view model
             appSettingViewModel = ViewModelProvider(
                 this,
                 appSettingViewModelFactory
             )[AppSettingViewModel::class.java]
     }
 
+    /**
+     * adds the data to the UI
+     */
     private fun setupUI() {
         if (application == null) { return }
         CoroutineScope(IO).launch {
@@ -101,6 +104,9 @@ class AppSettingActivity : AppCompatActivity() {
         }
     }
     
+    /**
+     * sets up the listeners for the submit and cancel buttons
+     */
     private fun setupListeners() {
         submitBtn.setOnClickListener() {
             if (application == null) { return@setOnClickListener }
