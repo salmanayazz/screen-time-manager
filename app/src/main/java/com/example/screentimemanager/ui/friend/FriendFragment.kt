@@ -74,6 +74,8 @@ class FriendFragment : Fragment() {
         day = calendar.get(Calendar.DAY_OF_MONTH)
         month = calendar.get(Calendar.MONTH)
         year = calendar.get(Calendar.YEAR)
+
+        friendDbList = listOf()
         displayDate.text = "$day-$month-$year"
 
         usageDatabase = UsageDatabase.getInstance(requireActivity())
@@ -151,16 +153,14 @@ class FriendFragment : Fragment() {
         val values = mutableListOf<SubcolumnValue>()
 
         for(i in 0 until numColumns){
-            CoroutineScope(IO).launch {
-                values.clear()
-                val usages = usageFirebaseDao.getUsageData(friendDbList[i], day, month, year)
-                var totalUsage: Long = 0
-                for (usage in usages){
-                    totalUsage += usage.usage
-                }
-                values.add(SubcolumnValue(totalUsage.toFloat()))
-                columns.add(Column(values).setHasLabels(true).setHasLabelsOnlyForSelected(true))
+            values.clear()
+            val usages = usageFirebaseDao.getUsageData(friendDbList[i], day, month, year)
+            var totalUsage: Long = 0
+            for (usage in usages){
+                totalUsage += usage.usage
             }
+            values.add(SubcolumnValue(totalUsage.toFloat()))
+            columns.add(Column(values).setHasLabels(true).setHasLabelsOnlyForSelected(true))
         }
 
         val columnChartData = ColumnChartData(columns)
