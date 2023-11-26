@@ -12,4 +12,8 @@
     <string name="sign_in">SIGN IN</string>
     <string name="sign_in_required">SIGN IN REQUIRED</string>
     <string name="sign_in_required_message">Please sign in to use friend function</string>
+    <string name="left_arrow"><![CDATA[<]]></string>
+    <string name="Date">Date</string>
+    <string name="right_arrow"><![CDATA[>]]></string>
+    <string name="usage">Usage</string>
 </resources>

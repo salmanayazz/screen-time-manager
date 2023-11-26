@@ -13,7 +13,7 @@ class FriendFirebaseDao(
      * @return
      * return list of the user's friends
      */
-    suspend fun getFriendList(): List<UserFirebase> {
+    suspend fun getFriendList(): List<String> {
         return listOf()
     }
 
@@ -21,7 +21,7 @@ class FriendFirebaseDao(
      * @return
      * return list of the user's friend requests
      */
-    suspend fun getFriendRequestList(): List<UserFirebase> {
+    suspend fun getFriendRequestList(): List<String> {
         return listOf()
     }
 
