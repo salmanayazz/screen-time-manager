@@ -31,6 +31,7 @@ import com.example.screentimemanager.data.local.usage.UsageDao
 import com.example.screentimemanager.data.local.usage.UsageDatabase
 import com.example.screentimemanager.data.repository.AppRepository
 import com.example.screentimemanager.data.repository.UsageRepository
+import com.example.screentimemanager.util.Util.getCurrentDate
 import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -272,25 +273,7 @@ class AppUsageService : Service() {
     }
 
 
-    /**
-     * gets the current date
-     * @return
-     * a triple containing the day, month, and year
-     */
-    fun getCurrentDate(): Triple<Int, Int, Int> {
-        // Get the user's time zone
-        val userTimeZone = TimeZone.getDefault().toZoneId()
 
-        // Get the current date in the user's time zone
-        val currentDate = LocalDate.now(userTimeZone)
-
-        // Extract day, month, and year
-        val day = currentDate.dayOfMonth
-        val month = currentDate.monthValue
-        val year = currentDate.year
-
-        return Triple(day, month, year)
-    }
 
     /**
      * checks if the usage access permission is granted
