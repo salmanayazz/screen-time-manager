@@ -1,6 +1,7 @@
 package com.example.screentimemanager.ui.appsetting
 
 import androidx.lifecycle.ViewModel
+import com.example.screentimemanager.data.local.app.App
 import com.example.screentimemanager.data.repository.AppRepository
 import com.example.screentimemanager.data.repository.UsageRepository
 import com.example.screentimemanager.util.Util.getCurrentDate
@@ -24,5 +25,9 @@ class AppSettingViewModel(
         CoroutineScope(IO).launch {
             appRepository.setAppLimit(appName, hasLimit, timeLimit)
         }
+    }
+
+    fun getAppData(appName: String): App? {
+        return appRepository.getApp(appName)
     }
 }

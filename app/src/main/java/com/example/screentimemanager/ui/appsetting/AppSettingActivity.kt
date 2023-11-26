@@ -14,6 +14,7 @@ import com.example.screentimemanager.data.local.app.AppDatabase
 import com.example.screentimemanager.data.local.usage.UsageDatabase
 import com.example.screentimemanager.data.repository.AppRepository
 import com.example.screentimemanager.data.repository.UsageRepository
+import com.example.screentimemanager.ui.appsetting.AppSettingViewModelFactory
 import com.example.screentimemanager.util.Compat.getParcelableExtraCompat
 import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.CoroutineScope
@@ -70,23 +71,29 @@ class AppSettingActivity : AppCompatActivity() {
     }
 
     private fun setupUI() {
+        if (application == null) { return }
         CoroutineScope(IO).launch {
+            // set the number picker max and min values
             hourSelector.minValue = 0
             hourSelector.maxValue = 23
-
             minuteSelector.minValue = 0
             minuteSelector.maxValue = 59
 
-            if (application != null) {
-                val usageMillisec = appSettingViewModel.getAppUsage(application!!.packageName)
-                val hours = (usageMillisec / (1000 * 60 * 60)).toInt()
-                val minutes = (usageMillisec / (1000 * 60)).toInt() - (hours * 60)
+            // set the app usage data
+            val usageMillisec = appSettingViewModel.getAppUsage(application!!.packageName)
+            val hoursUsage = (usageMillisec / (1000 * 60 * 60))
+            val minutesUsage = (usageMillisec / (1000 * 60)) - (hoursUsage * 60)
 
-                val formattedHours = String.format("%02d", hours)
-                val formattedMinutes = String.format("%02d", minutes)
+            val formattedHours = String.format("%02d", hoursUsage)
+            val formattedMinutes = String.format("%02d", minutesUsage)
+            todaysUsage.text = "$formattedHours : $formattedMinutes"
 
-                todaysUsage.text = "$formattedHours : $formattedMinutes"
-            }
+            // set the number pickers to the previous time limit the user picked
+            val appData = appSettingViewModel.getAppData(application!!.packageName) ?: return@launch
+            val hoursLimit = (appData.timeLimit / (1000 * 60 * 60))
+            val minutesLimit = (appData.timeLimit / (1000 * 60)) - (hoursLimit * 60)
+            hourSelector.value = hoursLimit.toInt()
+            minuteSelector.value = minutesLimit.toInt()
         }
     }
     
