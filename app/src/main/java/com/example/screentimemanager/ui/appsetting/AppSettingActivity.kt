@@ -2,6 +2,7 @@ package com.example.screentimemanager.ui.appsetting
 
 import android.content.pm.ApplicationInfo
 import android.os.Bundle
+import android.widget.Button
 import android.widget.NumberPicker
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -28,9 +29,11 @@ class AppSettingActivity : AppCompatActivity() {
     private var application : ApplicationInfo? = null
     private lateinit var appSettingViewModel: AppSettingViewModel
 
-    private val hourLimit: NumberPicker by lazy { this.findViewById(R.id.application_hour_limit)}
-    private val minuteLimit: NumberPicker by lazy { this.findViewById(R.id.application_minute_limit)}
+    private val hourSelector: NumberPicker by lazy { this.findViewById(R.id.application_hour_limit)}
+    private val minuteSelector: NumberPicker by lazy { this.findViewById(R.id.application_minute_limit)}
     private val todaysUsage: TextView by lazy { this.findViewById(R.id.todays_usage) }
+    private val submitBtn: Button by lazy { this.findViewById(R.id.submit_btn) }
+    private val cancelBtn: Button by lazy { this.findViewById(R.id.cancel_btn) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,6 +48,7 @@ class AppSettingActivity : AppCompatActivity() {
 
         setupMVVM()
         setupUI()
+        setupListeners()
     }
 
     private fun setupMVVM() {
@@ -67,11 +71,12 @@ class AppSettingActivity : AppCompatActivity() {
 
     private fun setupUI() {
         CoroutineScope(IO).launch {
-            hourLimit.minValue = 0
-            hourLimit.maxValue = 23
+            hourSelector.minValue = 0
+            hourSelector.maxValue = 23
 
-            minuteLimit.minValue = 0
-            minuteLimit.maxValue = 59
+            minuteSelector.minValue = 0
+            minuteSelector.maxValue = 59
+
             if (application != null) {
                 val usageMillisec = appSettingViewModel.getAppUsage(application!!.packageName)
                 val hours = (usageMillisec / (1000 * 60 * 60)).toInt()
@@ -82,6 +87,19 @@ class AppSettingActivity : AppCompatActivity() {
 
                 todaysUsage.text = "$formattedHours : $formattedMinutes"
             }
+        }
+    }
+    
+    private fun setupListeners() {
+        submitBtn.setOnClickListener() {
+            if (application == null) { return@setOnClickListener }
+            val timeLimit = (hourSelector.value * 60 * 60 * 1000 + minuteSelector.value * 60 * 1000).toLong()
+            
+            appSettingViewModel.setTimeLimit(application!!.packageName, true, timeLimit)
+            finish()
+        }
+        cancelBtn.setOnClickListener() {
+            finish()
         }
     }
 }

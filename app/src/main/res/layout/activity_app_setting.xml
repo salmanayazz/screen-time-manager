@@ -25,7 +25,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="00:00"
+            android:text="--:--"
             android:textAlignment="center" />
 
     </LinearLayout>
@@ -74,7 +74,6 @@
     </LinearLayout>
 
     <LinearLayout
-        android:id="@+id/buttonLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
@@ -82,7 +81,7 @@
         android:layout_marginHorizontal="30dp">
 
         <Button
-            android:id="@+id/submitBtn"
+            android:id="@+id/submit_btn"
             android:text="Submit"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -90,7 +89,7 @@
             android:layout_marginEnd="20dp"/>
 
         <Button
-            android:id="@+id/cancelBtn"
+            android:id="@+id/cancel_btn"
             android:text="Cancel"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
