@@ -28,6 +28,13 @@
             android:text="--:--"
             android:textAlignment="center" />
 
+        <com.google.android.material.switchmaterial.SwitchMaterial
+            android:id="@+id/enable_time_limit"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Enable time limit" />
+
     </LinearLayout>
 
 

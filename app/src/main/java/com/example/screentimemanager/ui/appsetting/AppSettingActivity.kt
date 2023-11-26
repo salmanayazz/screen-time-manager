@@ -14,7 +14,9 @@ import com.example.screentimemanager.data.local.app.AppDatabase
 import com.example.screentimemanager.data.local.usage.UsageDatabase
 import com.example.screentimemanager.data.repository.AppRepository
 import com.example.screentimemanager.data.repository.UsageRepository
+import com.example.screentimemanager.ui.appsetting.AppSettingViewModel
 import com.example.screentimemanager.util.Compat.getParcelableExtraCompat
+import com.google.android.material.switchmaterial.SwitchMaterial
 import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
@@ -34,6 +36,7 @@ class AppSettingActivity : AppCompatActivity() {
     private val todaysUsage: TextView by lazy { this.findViewById(R.id.todays_usage) }
     private val submitBtn: Button by lazy { this.findViewById(R.id.submit_btn) }
     private val cancelBtn: Button by lazy { this.findViewById(R.id.cancel_btn) }
+    private val enableTimeLimit: SwitchMaterial by lazy { this.findViewById(R.id.enable_time_limit) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -93,6 +96,8 @@ class AppSettingActivity : AppCompatActivity() {
             val minutesLimit = (appData.timeLimit / (1000 * 60)) - (hoursLimit * 60)
             hourSelector.value = hoursLimit.toInt()
             minuteSelector.value = minutesLimit.toInt()
+
+            enableTimeLimit.isChecked = appData.hasLimit
         }
     }
     
@@ -100,8 +105,9 @@ class AppSettingActivity : AppCompatActivity() {
         submitBtn.setOnClickListener() {
             if (application == null) { return@setOnClickListener }
             val timeLimit = (hourSelector.value * 60 * 60 * 1000 + minuteSelector.value * 60 * 1000).toLong()
+            val hasLimit = enableTimeLimit.isChecked
             
-            appSettingViewModel.setTimeLimit(application!!.packageName, true, timeLimit)
+            appSettingViewModel.setTimeLimit(application!!.packageName, hasLimit, timeLimit)
             finish()
         }
         cancelBtn.setOnClickListener() {
