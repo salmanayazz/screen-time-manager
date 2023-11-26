@@ -31,6 +31,7 @@ import com.example.screentimemanager.data.local.usage.UsageDao
 import com.example.screentimemanager.data.local.usage.UsageDatabase
 import com.example.screentimemanager.data.repository.AppRepository
 import com.example.screentimemanager.data.repository.UsageRepository
+import com.example.screentimemanager.util.Util.getCurrentDate
 import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -153,27 +154,24 @@ class AppUsageService : Service() {
      * if the time limit for the current app is reached
      */
     private fun timeLimitIsReached(): Boolean {
-        val usageStatsList = getTodaysUsageStats()
-
         var currentApp = getCurrentAppInUse()
 
-
+        val (day, month, year) = getCurrentDate()
 
         // get usage details for currentApp
-        var appUsage = usageStatsList.find() {
-            it.packageName == currentApp
+        var appUsage = usageRepository.getUsageData(day, month, year).find() {
+            it.appName == currentApp
         }
 
         if (appUsage != null) {
-            var totalTime = appUsage.totalTimeInForeground
+            var totalTime = appUsage.usage
 
             // if app was already opened since last poll, use a timer to calculate
             // its current usage since UsageStatsManager only updates its times when a user
             // exits and reenters the app
-            if (previousApp == currentApp) {
-                totalTime +=  System.currentTimeMillis() - previousAppTimestamp
-            } else {
-                saveUsageData(previousApp)
+            totalTime +=  System.currentTimeMillis() - previousAppTimestamp
+            if (previousApp != currentApp) {
+                saveUsageData(previousApp, totalTime)
                 previousApp = currentApp
                 previousAppTimestamp = System.currentTimeMillis()
             }
@@ -181,12 +179,12 @@ class AppUsageService : Service() {
             Log.i(TAG, "App $currentApp usage is $totalTime")
 
             // check if app has a time limit, and if the time limit is reached
-            val appEntry = appRepository.getApp(appUsage.packageName)
+            val appEntry = appRepository.getApp(appUsage.appName)
 
             if (appEntry != null && appEntry.hasLimit) {
                 val timeLimit = appEntry.timeLimit
                 Log.i(TAG, "App time limit is $timeLimit")
-                if (totalTime > timeLimit && appUsage.packageName != this.packageName) {
+                if (totalTime > timeLimit && appUsage.appName != this.packageName) {
                     return true;
                 }
             }
@@ -201,31 +199,21 @@ class AppUsageService : Service() {
      * @param appName
      * saves the today's usage data for the given app
      */
-    private fun saveUsageData(appName: String?) {
+    private fun saveUsageData(appName: String?, usageTime: Long) {
         if (appName == null) { return }
 
         val (day, month, year) = getCurrentDate()
 
         CoroutineScope(IO).launch {
-            // wait 5 seconds to ensure UsageStatsManager updates its usage data
-            delay(5000)
-            val usageStats = getTodaysUsageStats()
+            Log.i(TAG, "Saved app $appName usage time ${usageTime}")
 
-            var appUsage = usageStats.find() {
-                it.packageName == appName
+            // check if app is in db, if not create entry
+            var returnedApp = appRepository.getApp(appName)
+            if (returnedApp == null) {
+                appRepository.addApp(appName)
             }
-
-            if (appUsage != null) {
-                Log.i(TAG, "Saved app $appName usage time ${appUsage.totalTimeInForeground}")
-
-                // check if app is in db, if not create entry
-                var returnedApp = appRepository.getApp(appName)
-                if (returnedApp == null) {
-                    appRepository.addApp(appName)
-                }
-                // save usage value
-                usageRepository.setUsageData(appName, day, month, year, appUsage.totalTimeInForeground)
-            }
+            // save usage value
+            usageRepository.setUsageData(appName, day, month, year, usageTime)
         }
     }
 
@@ -272,25 +260,7 @@ class AppUsageService : Service() {
     }
 
 
-    /**
-     * gets the current date
-     * @return
-     * a triple containing the day, month, and year
-     */
-    fun getCurrentDate(): Triple<Int, Int, Int> {
-        // Get the user's time zone
-        val userTimeZone = TimeZone.getDefault().toZoneId()
 
-        // Get the current date in the user's time zone
-        val currentDate = LocalDate.now(userTimeZone)
-
-        // Extract day, month, and year
-        val day = currentDate.dayOfMonth
-        val month = currentDate.monthValue
-        val year = currentDate.year
-
-        return Triple(day, month, year)
-    }
 
     /**
      * checks if the usage access permission is granted
@@ -314,8 +284,8 @@ class AppUsageService : Service() {
         try {
             if (!overlayView.isAttachedToWindow) {
                 val params = WindowManager.LayoutParams(
-                    WindowManager.LayoutParams.WRAP_CONTENT, // TODO: temporarily set to WRAP_CONTENT
-                    WindowManager.LayoutParams.WRAP_CONTENT,
+                    WindowManager.LayoutParams.MATCH_PARENT,
+                    WindowManager.LayoutParams.MATCH_PARENT,
                     WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
                     WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
                     PixelFormat.TRANSLUCENT
