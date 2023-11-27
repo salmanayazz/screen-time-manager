@@ -4,6 +4,10 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.text.method.KeyListener
+import android.view.KeyEvent
+import android.view.View
+import android.view.View.OnKeyListener
 import android.widget.EditText
 import android.widget.ListView
 import androidx.appcompat.app.AlertDialog
@@ -49,6 +53,39 @@ class AddFriendsActivity : AppCompatActivity() {
             friendRequests = it as ArrayList<String>
         }
 
+        etSearchFriend.isFocusableInTouchMode = true
+        etSearchFriend.requestFocus()
+        etSearchFriend.setOnKeyListener(object: OnKeyListener{
+            override fun onKey(view: View?, keyCode: Int, event: KeyEvent?): Boolean {
+                if(event!!.action == KeyEvent.ACTION_DOWN
+                    && keyCode == KeyEvent.KEYCODE_ENTER){
+                    val friend = userRepository.getUser(etSearchFriend.text.toString())
+                    if(friend != null){
+                        val builder = AlertDialog.Builder(this@AddFriendsActivity)
+                        builder.setTitle("Add friend")
+                        builder.setMessage("Do you want to add ${friend.firstName} ${friend.lastName}?")
+                        builder.setPositiveButton("Add"){
+                                _, _ -> {
+                            CoroutineScope(IO).launch {
+                                friendRepository.sendFriendRequest(friend.email)
+                            }
+                        }
+                        }
+                        builder.setNegativeButton("Cancel"){
+                                dialog, _ -> {
+                            dialog.dismiss()
+                        }
+                        }
+                        val alertDialog: AlertDialog = builder.create()
+                        alertDialog.show()
+                    }
+                    return true
+                }
+                return false
+            }
+
+        })
+        /*
         etSearchFriend.addTextChangedListener(object: TextWatcher{
             override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
                 //Do nothing
@@ -59,28 +96,32 @@ class AddFriendsActivity : AppCompatActivity() {
             }
 
             override fun afterTextChanged(str: Editable?) {
-                val friend = userRepository.getUser(str.toString())
-                if(friend != null){
-                    val builder = AlertDialog.Builder(this@AddFriendsActivity)
-                    builder.setTitle("Add friend")
-                    builder.setMessage("Do you want to add ${friend.firstName} ${friend.lastName}?")
-                    builder.setPositiveButton("Add"){
-                            _, _ -> {
-                                CoroutineScope(IO).launch {
-                                    friendRepository.sendFriendRequest(friend.email)
-                                }
+                val userEntry = str.toString()
+                if(userEntry.isNotEmpty() && userEntry[userEntry.length - 1] == '\n'){
+                    val friend = userRepository.getUser(userEntry)
+                    if(friend != null){
+                        val builder = AlertDialog.Builder(this@AddFriendsActivity)
+                        builder.setTitle("Add friend")
+                        builder.setMessage("Do you want to add ${friend.firstName} ${friend.lastName}?")
+                        builder.setPositiveButton("Add"){
+                                _, _ -> {
+                            CoroutineScope(IO).launch {
+                                friendRepository.sendFriendRequest(friend.email)
                             }
+                        }
+                        }
+                        builder.setNegativeButton("Cancel"){
+                                dialog, _ -> {
+                            dialog.dismiss()
+                        }
+                        }
+                        val alertDialog: AlertDialog = builder.create()
+                        alertDialog.show()
                     }
-                    builder.setNegativeButton("Cancel"){
-                            dialog, _ -> {
-                                dialog.dismiss()
-                            }
-                    }
-                    val alertDialog: AlertDialog = builder.create()
-                    alertDialog.show()
                 }
             }
         })
+        */
 
         val adapter = FriendRequestListAdapter(this, requestFriendName)
         lvFriendRequest.adapter = adapter
