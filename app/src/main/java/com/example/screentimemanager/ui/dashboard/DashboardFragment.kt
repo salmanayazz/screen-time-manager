@@ -1,5 +1,6 @@
 package com.example.screentimemanager.ui.dashboard
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -14,6 +15,7 @@ import com.example.screentimemanager.R
 import com.example.screentimemanager.data.firebase.user.UserFirebase
 import com.example.screentimemanager.data.firebase.user.UserFirebaseDao
 import com.example.screentimemanager.databinding.FragmentDashboardBinding
+import com.example.screentimemanager.ui.authentication.Login
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
@@ -62,6 +64,7 @@ class DashboardFragment : Fragment() {
     }
 
     private fun onLoginListener(){
+        /*
         val email: String = emailEditText.text.toString()
         val password: String = passwordEditText.text.toString()
 
@@ -72,7 +75,9 @@ class DashboardFragment : Fragment() {
             GlobalScope.launch{
                 userFirebaseDao.addUser(user)
             }
-        }
+        }*/
+        var intent: Intent = Intent(requireContext(), Login::class.java)
+        startActivity(intent)
     }
     override fun onDestroyView() {
         super.onDestroyView()
