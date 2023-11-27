@@ -163,23 +163,25 @@ class AppUsageService : Service() {
             it.appName == currentApp
         }
 
+
+        var totalTime = appUsage?.usage ?: 0
+
+        // if app was already opened since last poll, use a timer to calculate
+        // its current usage since UsageStatsManager only updates its times when a user
+        // exits and reenters the app
+        totalTime +=  System.currentTimeMillis() - previousAppTimestamp
+        if (previousApp != currentApp) {
+            saveUsageData(previousApp, totalTime)
+            previousApp = currentApp
+            previousAppTimestamp = System.currentTimeMillis()
+        }
+
+        Log.i(TAG, "App $currentApp usage is $totalTime")
+
+        // check if app has a time limit, and if the time limit is reached
         if (appUsage != null) {
-            var totalTime = appUsage.usage
-
-            // if app was already opened since last poll, use a timer to calculate
-            // its current usage since UsageStatsManager only updates its times when a user
-            // exits and reenters the app
-            totalTime +=  System.currentTimeMillis() - previousAppTimestamp
-            if (previousApp != currentApp) {
-                saveUsageData(previousApp, totalTime)
-                previousApp = currentApp
-                previousAppTimestamp = System.currentTimeMillis()
-            }
-
-            Log.i(TAG, "App $currentApp usage is $totalTime")
-
-            // check if app has a time limit, and if the time limit is reached
             val appEntry = appRepository.getApp(appUsage.appName)
+
 
             if (appEntry != null && appEntry.hasLimit) {
                 val timeLimit = appEntry.timeLimit
@@ -188,8 +190,10 @@ class AppUsageService : Service() {
                     return true;
                 }
             }
-        } else {
-            Log.e(TAG, "App $currentApp does not exist")
+        } else if (currentApp != null) {
+            CoroutineScope(IO).launch {
+                appRepository.addApp(currentApp)
+            }
         }
 
         return false;
