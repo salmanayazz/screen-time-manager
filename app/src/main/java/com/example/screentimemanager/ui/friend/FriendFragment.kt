@@ -8,6 +8,7 @@ import android.widget.ListView
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModelProvider
 import com.example.screentimemanager.R
 import com.example.screentimemanager.data.firebase.friend.FriendFirebaseDao
@@ -87,7 +88,7 @@ class FriendFragment : Fragment() {
         friendRepo = FriendRepository(friendDao)
 
         CoroutineScope(IO).launch{
-            friendDbList = friendRepo.getFriendList()
+            //friendDbList = friendRepo.getFriendList()
         }
 
         chart.columnChartData = generateColumnData()
@@ -99,6 +100,13 @@ class FriendFragment : Fragment() {
             adapter.clear()
             adapter.addAll(it)
             friendList.adapter = adapter
+        }
+
+        friendRepo.getFriendRequestList()
+
+        friendRepo.friendRequests.observe(requireActivity()) {
+            println(it)
+            println("friend reqs")
         }
 
         leftArrow.setOnClickListener{
@@ -138,6 +146,11 @@ class FriendFragment : Fragment() {
                 }
                 dialog.setCancelable(false)
                 dialog.show()
+//                CoroutineScope(IO).launch {
+//                    friendRepo.sendFriendRequest("wophjjasds")
+//                    println("send request")
+//                }
+
             }
             else{
                 val dialog = AddFriendFragmentDialog()

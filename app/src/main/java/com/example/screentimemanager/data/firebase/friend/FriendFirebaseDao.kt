@@ -1,24 +1,33 @@
 package com.example.screentimemanager.data.firebase.friend
 
 import android.util.Log
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.ValueEventListener
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 
 class FriendFirebaseDao(
     private val database: DatabaseReference
 ) {
     // use database.child.("friends") to query firebase
     private val friendsRef: DatabaseReference = database.child("friends")
-    val userEmail = FirebaseAuth.getInstance().currentUser?.email!!
+    //val userEmail = FirebaseAuth.getInstance().currentUser?.email!!
+    val userEmail = "wophjjasds"
 
+    private val _friendRequests = MutableLiveData<List<String>>()
+    val friendRequests: LiveData<List<String>> = _friendRequests
     /**
      * @return
      * return list of the user's friends
      */
-    suspend fun getFriendList(): List<String> {
+    fun getFriendList(): List<String> {
         val friends: ArrayList<String> = ArrayList()
         friendsRef.addListenerForSingleValueEvent(
             object : ValueEventListener{
@@ -26,11 +35,11 @@ class FriendFirebaseDao(
                     for(receiver in snapshot.children){
                         for(sender in receiver.children){
                             if(receiver.getValue(String::class.java)!!.compareTo(userEmail) == 0
-                                && sender.child("isRequest").getValue(Boolean::class.java) == false){
+                                && sender.child("request").getValue(Boolean::class.java) == false){
                                 friends.add(sender.getValue(String::class.java)!!)
                             }
                             else if(sender.getValue(String::class.java)!!.compareTo(userEmail) == 0
-                                && sender.child("isRequest").getValue(Boolean::class.java) == false){
+                                && sender.child("request").getValue(Boolean::class.java) == false){
                                 friends.add(receiver.getValue(String::class.java)!!)
                             }
                         }
@@ -49,36 +58,43 @@ class FriendFirebaseDao(
      * @return
      * return list of the user's friend requests
      */
-    suspend fun getFriendRequestList(): List<String> {
+    fun getFriendRequestList() {
         val requestSenderList: ArrayList<String> = ArrayList()
-        friendsRef.orderByChild("receiverEmail").equalTo(userEmail).addListenerForSingleValueEvent(
-            object : ValueEventListener{
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    for(receiver in snapshot.children){
-                        if(receiver.getValue(String::class.java)!!.compareTo(userEmail) == 0){
-                            for (sender in receiver.children){
-                                if(sender.child("isRequest").getValue(Boolean::class.java) == true){
-                                    requestSenderList.add(sender.getValue(String::class.java)!!)
-                                }
+
+        friendsRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                for (receiver in snapshot.children) {
+                    println("FOUND A PERSON")
+                    if (receiver.key == userEmail) {
+                        println("FOUND PERSON")
+                        for (sender in receiver.children) {
+                            println("THERES A FRIEND")
+                            val isRequest = sender.child("request").getValue(Boolean::class.java) ?: false
+                            val friendEmail = sender.key
+                            println("isRequest $isRequest")
+                            println("friendEmail $friendEmail")
+                            if (isRequest && friendEmail != null) {
+                                requestSenderList.add(friendEmail)
                             }
                         }
                     }
                 }
-
-                override fun onCancelled(error: DatabaseError) {
-                    Log.i("getFriendRequestList() error", error.message)
-                }
+                _friendRequests.value = requestSenderList
             }
-        )
-        return requestSenderList
+
+            override fun onCancelled(error: DatabaseError) {
+                Log.i("getFriendRequestList() error", error.message)
+            }
+        })
     }
+
 
     /**
      * @param friendEmail
      * sends a friend request to the user with the given email
      */
     suspend fun sendFriendRequest(friendEmail: String) {
-        friendsRef.child("receiver").child("sender").setValue(FriendFirebase(friendEmail, userEmail, true))
+        friendsRef.child(friendEmail).child(userEmail).setValue(FriendFirebase(friendEmail, userEmail, true))
     }
 
     /**
