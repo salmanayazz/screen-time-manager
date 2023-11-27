@@ -11,8 +11,8 @@ class UserRepository(
      * @return
      * return the User object with the given username
      */
-    fun getUser(username: String): UserFirebase {
-        return userFirebaseDao.getUser(username)
+    suspend fun getUser(username: String): UserFirebase {
+        return userFirebaseDao.getUser(username)!!
     }
 
     // TODO: other functions for authentication
