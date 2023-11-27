@@ -26,7 +26,7 @@ class UserFirebaseDao(
     suspend fun addUser(user: UserFirebase){
         withContext(Dispatchers.IO){
             database.child("users")
-                .child(user.email)
+                .child(user.email.replace("@","(").replace(".",")"))
                 .setValue(user).await()
         }
     }

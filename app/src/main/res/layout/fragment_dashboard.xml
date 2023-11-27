@@ -6,57 +6,8 @@
     android:layout_height="match_parent"
     tools:context=".ui.dashboard.DashboardFragment">
 
-    <LinearLayout
-        android:orientation="vertical"
-        android:layout_width="match_parent"
-        android:layout_marginHorizontal="20dp"
-
+    <TextView
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:padding="10dp"
-        android:background="@drawable/curved_container_shape">
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="To use this feature, you must login"/>
-
-        <EditText
-            android:id="@+id/login_username"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:background="@drawable/search_view_shape"
-            android:layout_marginVertical="10dp"
-            android:padding="10dp"
-            android:hint="Username"/>
-
-        <EditText
-            android:id="@+id/login_password"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:layout_marginVertical="10dp"
-            android:padding="10dp"
-            android:background="@drawable/search_view_shape"
-            android:hint="Password"/>
-
-        <RelativeLayout
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_marginHorizontal="10dp"
-            android:orientation="vertical">
-            <Button
-                android:id="@+id/log_in_btn"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Log In"
-                android:layout_alignParentRight="true"
-                />
-
-            <Button
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Sign Up"
-                android:layout_alignParentLeft="true"
-                />
-        </RelativeLayout>
-    </LinearLayout>
+        android:text="Taylor guy"/>
 </RelativeLayout>
