@@ -44,7 +44,7 @@ class AddFriendsActivity : AppCompatActivity() {
         for(request in friendRequests){
             requestFriendName.add(userRepository.getUser(request))
         }
-
+        friendRepository.getFriendRequestList()
         friendRepository.friendRequestList.observe(this){
             friendRequests = it as ArrayList<String>
         }
