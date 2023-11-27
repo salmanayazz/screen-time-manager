@@ -70,96 +70,93 @@ class FriendFragment : Fragment() {
         // to the login activity
         firebaseAuth = FirebaseAuth.getInstance()
         val currentUser = firebaseAuth.currentUser
-        if (currentUser == null) {
+        /*if (currentUser == null) {
             // if there's no user signed in
             startActivity(Intent(requireContext(), Login::class.java))
             //val transaction = requireFragmentManager().beginTransaction()
             //transaction.replace(R.id.container,LogFragment())
             //transaction.addToBackStack(null)
             //transaction.commit()
+        }*/
+        friends = ArrayList()
+        val adapter = FriendListAdapter(requireActivity(), R.layout.layout_friend_list, friends)
+        friendViewModel = ViewModelProvider(requireActivity()).get(FriendViewModel::class.java)
+        btnAddFriend = ret.findViewById(R.id.fab_addFriend)
+        friendList = ret.findViewById(R.id.lv_friendList)
+        leftArrow = ret.findViewById(R.id.tv_leftArrow)
+        rightArrow = ret.findViewById(R.id.tv_rightArrow)
+        displayDate = ret.findViewById(R.id.tv_date)
+        chart = ret.findViewById(R.id.lcv_histogram)
+        calendar = Calendar.getInstance()
+        day = calendar.get(Calendar.DAY_OF_MONTH)
+        month = calendar.get(Calendar.MONTH)
+        year = calendar.get(Calendar.YEAR)
+
+        friendDbList = listOf()
+        displayDate.text = "$day-$month-$year"
+
+        usageDatabase = UsageDatabase.getInstance(requireActivity())
+        usageDao = usageDatabase.usageDao
+        firebaseDatabaseRef = FirebaseDatabase.getInstance().reference
+        usageFirebaseDao = UsageFirebaseDao(firebaseDatabaseRef)
+        friendDao = FriendFirebaseDao(firebaseDatabaseRef)
+        usageRepo = UsageRepository(usageFirebaseDao, usageDao)
+        friendRepo = FriendRepository(friendDao)
+
+        CoroutineScope(IO).launch {
+            friendDbList = friendRepo.getFriendList()
         }
-        else {
-            friends = ArrayList()
-            val adapter = FriendListAdapter(requireActivity(), R.layout.layout_friend_list, friends)
-            friendViewModel = ViewModelProvider(requireActivity()).get(FriendViewModel::class.java)
-            btnAddFriend = ret.findViewById(R.id.fab_addFriend)
-            friendList = ret.findViewById(R.id.lv_friendList)
-            leftArrow = ret.findViewById(R.id.tv_leftArrow)
-            rightArrow = ret.findViewById(R.id.tv_rightArrow)
-            displayDate = ret.findViewById(R.id.tv_date)
-            chart = ret.findViewById(R.id.lcv_histogram)
-            calendar = Calendar.getInstance()
+
+        chart.columnChartData = generateColumnData()
+
+        //friendList is to show the list view to list out friends
+        friendList.adapter = adapter
+
+        friendViewModel.friends.observe(requireActivity()) {
+            adapter.clear()
+            adapter.addAll(it)
+            friendList.adapter = adapter
+        }
+
+        leftArrow.setOnClickListener {
+            calendar.add(Calendar.DATE, -1)
             day = calendar.get(Calendar.DAY_OF_MONTH)
             month = calendar.get(Calendar.MONTH)
             year = calendar.get(Calendar.YEAR)
-
-            friendDbList = listOf()
             displayDate.text = "$day-$month-$year"
-
-            usageDatabase = UsageDatabase.getInstance(requireActivity())
-            usageDao = usageDatabase.usageDao
-            firebaseDatabaseRef = FirebaseDatabase.getInstance().reference
-            usageFirebaseDao = UsageFirebaseDao(firebaseDatabaseRef)
-            friendDao = FriendFirebaseDao(firebaseDatabaseRef)
-            usageRepo = UsageRepository(usageFirebaseDao, usageDao)
-            friendRepo = FriendRepository(friendDao)
-
-            CoroutineScope(IO).launch {
-                friendDbList = friendRepo.getFriendList()
-            }
-
             chart.columnChartData = generateColumnData()
+        }
 
-            //friendList is to show the list view to list out friends
-            friendList.adapter = adapter
+        rightArrow.setOnClickListener {
+            calendar.add(Calendar.DATE, 1)
+            day = calendar.get(Calendar.DAY_OF_MONTH)
+            month = calendar.get(Calendar.MONTH)
+            year = calendar.get(Calendar.YEAR)
+            displayDate.text = "$day-$month-$year"
+            chart.columnChartData = generateColumnData()
+        }
 
-            friendViewModel.friends.observe(requireActivity()) {
-                adapter.clear()
-                adapter.addAll(it)
-                friendList.adapter = adapter
-            }
-
-            leftArrow.setOnClickListener {
-                calendar.add(Calendar.DATE, -1)
-                day = calendar.get(Calendar.DAY_OF_MONTH)
-                month = calendar.get(Calendar.MONTH)
-                year = calendar.get(Calendar.YEAR)
-                displayDate.text = "$day-$month-$year"
-                chart.columnChartData = generateColumnData()
-            }
-
-            rightArrow.setOnClickListener {
-                calendar.add(Calendar.DATE, 1)
-                day = calendar.get(Calendar.DAY_OF_MONTH)
-                month = calendar.get(Calendar.MONTH)
-                year = calendar.get(Calendar.YEAR)
-                displayDate.text = "$day-$month-$year"
-                chart.columnChartData = generateColumnData()
-            }
-
-            //When clicked add friend button, if the user has signed in, it will show the AddFriendFragmentDialog
-            //Otherwise, it will show a dialog to tell the user to sign in.
-            //There will be a sign in button link to the sign in page.
-            //If the user click cancel, the dialog will be dismissed.
-            btnAddFriend.setOnClickListener {
-                if (friendViewModel.signedIn.value == false) {
-                    val dialog = AlertDialog.Builder(requireActivity())
-                    dialog.setTitle(getString(R.string.sign_in_required))
-                    dialog.setMessage(getString(R.string.sign_in_required_message))
-                    dialog.setPositiveButton(getString(R.string.sign_in)) { _, _ ->
-                        //The button is not working yet, as the sign in page is not created yet.
-                        //Intent to sign in page
-                        friendViewModel.signedIn.value = true
-                    }
-                    dialog.setNegativeButton(getString(R.string.cancel)) { _, _ ->
-
-                    }
-                    dialog.setCancelable(false)
-                    dialog.show()
-                } else {
-                    val dialog = AddFriendFragmentDialog()
-                    dialog.show(requireActivity().supportFragmentManager, ADD_FRIEND_DIALOG_TAG)
+        //When clicked add friend button, if the user has signed in, it will show the AddFriendFragmentDialog
+        //Otherwise, it will show a dialog to tell the user to sign in.
+        //There will be a sign in button link to the sign in page.
+        //If the user click cancel, the dialog will be dismissed.
+        btnAddFriend.setOnClickListener {
+            if (currentUser == null) {
+                // if the user has not logged in
+                val dialog = AlertDialog.Builder(requireActivity())
+                dialog.setTitle(getString(R.string.sign_in_required))
+                dialog.setMessage(getString(R.string.sign_in_required_message))
+                dialog.setPositiveButton(getString(R.string.sign_in)) { _, _ ->
+                    startActivity(Intent(requireContext(), Login::class.java))
                 }
+                dialog.setNegativeButton(getString(R.string.cancel)) { _, _ ->
+
+                }
+                dialog.setCancelable(false)
+                dialog.show()
+            } else {
+                val dialog = AddFriendFragmentDialog()
+                dialog.show(requireActivity().supportFragmentManager, ADD_FRIEND_DIALOG_TAG)
             }
         }
         return ret
