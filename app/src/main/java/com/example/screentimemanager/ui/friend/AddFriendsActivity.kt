@@ -85,43 +85,6 @@ class AddFriendsActivity : AppCompatActivity() {
             }
 
         })
-        /*
-        etSearchFriend.addTextChangedListener(object: TextWatcher{
-            override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
-                //Do nothing
-            }
-
-            override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
-                //Do nothing
-            }
-
-            override fun afterTextChanged(str: Editable?) {
-                val userEntry = str.toString()
-                if(userEntry.isNotEmpty() && userEntry[userEntry.length - 1] == '\n'){
-                    val friend = userRepository.getUser(userEntry)
-                    if(friend != null){
-                        val builder = AlertDialog.Builder(this@AddFriendsActivity)
-                        builder.setTitle("Add friend")
-                        builder.setMessage("Do you want to add ${friend.firstName} ${friend.lastName}?")
-                        builder.setPositiveButton("Add"){
-                                _, _ -> {
-                            CoroutineScope(IO).launch {
-                                friendRepository.sendFriendRequest(friend.email)
-                            }
-                        }
-                        }
-                        builder.setNegativeButton("Cancel"){
-                                dialog, _ -> {
-                            dialog.dismiss()
-                        }
-                        }
-                        val alertDialog: AlertDialog = builder.create()
-                        alertDialog.show()
-                    }
-                }
-            }
-        })
-        */
 
         val adapter = FriendRequestListAdapter(this, requestFriendName)
         lvFriendRequest.adapter = adapter
