@@ -1,16 +1,20 @@
 package com.example.screentimemanager.data.repository
 
+import androidx.lifecycle.LiveData
 import com.example.screentimemanager.data.firebase.friend.FriendFirebaseDao
 import com.example.screentimemanager.data.firebase.user.UserFirebase
 
 class FriendRepository(
     private val friendDao: FriendFirebaseDao
 ) {
+    val friendList: LiveData<List<String>> = friendDao.friendList
+    val friendRequestList: LiveData<List<String>> = friendDao.friendRequestList
+
     /**
      * @return
      * return list of the user's friends
      */
-    fun getFriendList(): List<String> {
+    fun getFriendList() {
         return friendDao.getFriendList()
     }
 
@@ -18,7 +22,7 @@ class FriendRepository(
      * @return
      * return list of the user's friend requests
      */
-    fun getFriendRequestList(): List<String> {
+    fun getFriendRequestList() {
         return friendDao.getFriendRequestList()
     }
 

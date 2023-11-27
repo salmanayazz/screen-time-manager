@@ -20,8 +20,7 @@ interface UsageDao {
      * @param appName
      * the app to add to the user's list of apps
      */
-    @Query("INSERT OR REPLACE INTO " +
-            "Usage (appName, day, month, year, usage) " +
+    @Query("INSERT OR REPLACE INTO Usage (appName, day, month, year, usage) " +
             "VALUES (:appName, :day, :month, :year, :usage)"
     )
     suspend fun setUsageData(appName: String, day: Int, month: Int, year: Int, usage: Long)
