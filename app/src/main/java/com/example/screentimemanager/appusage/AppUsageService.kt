@@ -154,42 +154,59 @@ class AppUsageService : Service() {
      * if the time limit for the current app is reached
      */
     private fun timeLimitIsReached(): Boolean {
-        var currentApp = getCurrentAppInUse()
+        val currentApp = getCurrentAppInUse() ?: return false
 
         val (day, month, year) = getCurrentDate()
 
         // get usage details for currentApp
-        var appUsage = usageRepository.getUsageData(day, month, year).find() {
+        var appUsage = usageRepository.getUsageData(day, month, year).find {
             it.appName == currentApp
         }
 
-        if (appUsage != null) {
-            var totalTime = appUsage.usage
+        var totalTime = appUsage?.usage ?: 0
 
-            // if app was already opened since last poll, use a timer to calculate
-            // its current usage since UsageStatsManager only updates its times when a user
-            // exits and reenters the app
-            totalTime +=  System.currentTimeMillis() - previousAppTimestamp
-            if (previousApp != currentApp) {
-                saveUsageData(previousApp, totalTime)
-                previousApp = currentApp
-                previousAppTimestamp = System.currentTimeMillis()
+        // if app was already opened since last poll, use a timer to calculate
+        // its current usage since UsageStatsManager only updates its times when a user
+        // exits and reenters the app
+        totalTime += System.currentTimeMillis() - previousAppTimestamp
+
+        // check if the app has changed since the last poll
+        if (previousApp != currentApp) {
+            // save usage data for the previous app
+            saveUsageData(previousApp, totalTime)
+
+            // update previous app and new app timestamp
+            previousApp = currentApp
+            previousAppTimestamp = System.currentTimeMillis()
+        }
+
+        Log.i(TAG, "App $currentApp usage is $totalTime")
+
+        // check if the app exists in appRepository, if not, add it
+        if (appRepository.getApp(currentApp) == null) {
+            CoroutineScope(IO).launch {
+                appRepository.addApp(currentApp)
             }
+        }
 
-            Log.i(TAG, "App $currentApp usage is $totalTime")
+        // if no usage data for current day, create it
+        if (appUsage == null) {
+            CoroutineScope(IO).launch {
+                usageRepository.setUsageData(currentApp, day, month, year, 0)
+            }
+        }
 
-            // check if app has a time limit, and if the time limit is reached
+        // check if app has a time limit, and if the time limit is reached
+        if (appUsage != null && appUsage.appName != this.packageName) {
             val appEntry = appRepository.getApp(appUsage.appName)
 
             if (appEntry != null && appEntry.hasLimit) {
                 val timeLimit = appEntry.timeLimit
                 Log.i(TAG, "App time limit is $timeLimit")
-                if (totalTime > timeLimit && appUsage.appName != this.packageName) {
-                    return true;
+                if (totalTime > timeLimit) {
+                    return true
                 }
             }
-        } else {
-            Log.e(TAG, "App $currentApp does not exist")
         }
 
         return false;
