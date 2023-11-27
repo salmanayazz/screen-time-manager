@@ -8,7 +8,6 @@ import android.widget.ListView
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModelProvider
 import com.example.screentimemanager.R
 import com.example.screentimemanager.data.firebase.friend.FriendFirebaseDao
@@ -102,13 +101,6 @@ class FriendFragment : Fragment() {
             friendList.adapter = adapter
         }
 
-        friendRepo.getFriendList()
-
-        friendRepo.friendList.observe(requireActivity()) {
-            println(it)
-            println("friend reqs")
-        }
-
         leftArrow.setOnClickListener{
             calendar.add(Calendar.DATE, -1)
             day = calendar.get(Calendar.DAY_OF_MONTH)
@@ -146,11 +138,6 @@ class FriendFragment : Fragment() {
                 }
                 dialog.setCancelable(false)
                 dialog.show()
-//                CoroutineScope(IO).launch {
-//                    friendRepo.sendFriendRequest("wophjjasds")
-//                    println("send request")
-//                }
-
             }
             else{
                 val dialog = AddFriendFragmentDialog()

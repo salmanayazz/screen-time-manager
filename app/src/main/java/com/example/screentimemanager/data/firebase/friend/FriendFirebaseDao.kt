@@ -22,8 +22,7 @@ class FriendFirebaseDao(
     val RECEIVER_EMAIL = "receiverEmail"
 
     private val friendsRef: DatabaseReference = database.child("friends")
-    //val userEmail = FirebaseAuth.getInstance().currentUser?.email!!
-    val userEmail = "wophjjasds"
+    val userEmail = FirebaseAuth.getInstance().currentUser?.email!!
 
     private val _friendList = MutableLiveData<List<String>>()
     val friendList: LiveData<List<String>> = _friendList
@@ -60,8 +59,7 @@ class FriendFirebaseDao(
     }
 
     /**
-     * @return
-     * return list of the user's friend requests
+     * updates the friendRequestList live data variable
      */
     fun getFriendRequestList() {
         val requestSenderList: ArrayList<String> = ArrayList()
@@ -107,7 +105,7 @@ class FriendFirebaseDao(
      * accepts the friend request from the user with the given email
      */
     suspend fun acceptFriendRequest(friendEmail: String) {
-        friendsRef.child("receiver").child("sender").setValue(FriendFirebase(userEmail, friendEmail, false))
+        friendsRef.child(userEmail).child(friendEmail).setValue(FriendFirebase(userEmail, friendEmail, false))
     }
 
     /**
@@ -115,24 +113,8 @@ class FriendFirebaseDao(
      * declines friend request/removes friend with the given email
      */
     suspend fun deleteFriend(friendEmail: String) {
-        friendsRef.addListenerForSingleValueEvent(
-            object : ValueEventListener{
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    for(receiver in snapshot.children){
-                        for(sender in receiver.children){
-                            if(receiver.getValue(String::class.java)!!.compareTo(friendEmail) == 0
-                                && sender.getValue(String::class.java)!!.compareTo(userEmail) == 0){
-                                friendsRef.child("receiver").child("sender").removeValue()
-                            }
-                        }
-                    }
-                }
-
-                override fun onCancelled(error: DatabaseError) {
-                    Log.i("deleteFriend() error", error.message)
-                }
-
-            }
-        )
+        // delete both possible variations
+        friendsRef.child(userEmail).child(friendEmail).removeValue()
+        friendsRef.child(friendEmail).child(userEmail).removeValue()
     }
 }
