@@ -7,6 +7,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
+import com.example.screentimemanager.MainActivity
 import com.example.screentimemanager.R
 import com.example.screentimemanager.data.firebase.user.UserFirebase
 import com.example.screentimemanager.data.firebase.user.UserFirebaseDao
@@ -69,7 +70,10 @@ class Register : AppCompatActivity() {
                         userFirebaseDao.addUser(user)
                     }
                     Toast.makeText(this,"Logged In", Toast.LENGTH_SHORT).show()
-                    finish()
+                    val intent = Intent(this, MainActivity::class.java)
+                    intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
+                    intent.putExtra("isFriendTab", true)
+                    startActivity(intent)
                 }
                 else{
                     Toast.makeText(this,"Failed to create account", Toast.LENGTH_SHORT).show()

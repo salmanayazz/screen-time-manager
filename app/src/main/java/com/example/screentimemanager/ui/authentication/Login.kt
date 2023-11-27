@@ -7,6 +7,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
+import com.example.screentimemanager.MainActivity
 import com.example.screentimemanager.R
 import com.example.screentimemanager.data.firebase.user.UserFirebaseDao
 import com.google.firebase.auth.FirebaseAuth
@@ -28,8 +29,8 @@ class Login : AppCompatActivity() {
 
         registerTextView = findViewById<TextView>(R.id.register_button_text)
         loginBtn = findViewById(R.id.login_btn)
-        emailEditText = findViewById(R.id.password_login_form)
-        passwordEditText = findViewById(R.id.email_login_form)
+        emailEditText = findViewById(R.id.email_login_form)
+        passwordEditText = findViewById(R.id.password_login_form)
 
 
         registerTextView.setOnClickListener{
@@ -51,7 +52,11 @@ class Login : AppCompatActivity() {
             firebaseAuth.signInWithEmailAndPassword(email,password).addOnCompleteListener{
                 if(it.isSuccessful){
                     Toast.makeText(this,"Logged In",Toast.LENGTH_SHORT).show()
-                    finish()
+
+                    val intent = Intent(this, MainActivity::class.java)
+                    intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
+                    intent.putExtra("isFriendTab", true)
+                    startActivity(intent)
                 }
                 else{
                     Toast.makeText(this,"Invalid Credentials",Toast.LENGTH_SHORT).show()
