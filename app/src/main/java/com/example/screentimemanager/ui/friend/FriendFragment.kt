@@ -103,8 +103,10 @@ class FriendFragment : Fragment() {
         usageRepo = UsageRepository(usageFirebaseDao, usageDao)
         friendRepo = FriendRepository(friendDao)
 
-        CoroutineScope(IO).launch {
-            friendDbList = friendRepo.getFriendList()
+        friendRepo.getFriendList()
+
+        friendRepo.friendList.observe(requireActivity()) {
+            friendDbList = it
         }
 
         chart.columnChartData = generateColumnData()
@@ -117,8 +119,8 @@ class FriendFragment : Fragment() {
             adapter.addAll(it)
             friendList.adapter = adapter
         }
-
-        leftArrow.setOnClickListener {
+        //When clicking the left arrow, the date will change to the day before
+        leftArrow.setOnClickListener{
             calendar.add(Calendar.DATE, -1)
             day = calendar.get(Calendar.DAY_OF_MONTH)
             month = calendar.get(Calendar.MONTH)
@@ -127,7 +129,8 @@ class FriendFragment : Fragment() {
             chart.columnChartData = generateColumnData()
         }
 
-        rightArrow.setOnClickListener {
+        //When clicking the right arrow, the date will change to the day after
+        rightArrow.setOnClickListener{
             calendar.add(Calendar.DATE, 1)
             day = calendar.get(Calendar.DAY_OF_MONTH)
             month = calendar.get(Calendar.MONTH)
@@ -136,32 +139,15 @@ class FriendFragment : Fragment() {
             chart.columnChartData = generateColumnData()
         }
 
-        //When clicked add friend button, if the user has signed in, it will show the AddFriendFragmentDialog
-        //Otherwise, it will show a dialog to tell the user to sign in.
-        //There will be a sign in button link to the sign in page.
-        //If the user click cancel, the dialog will be dismissed.
-        btnAddFriend.setOnClickListener {
-            if (currentUser == null) {
-                // if the user has not logged in
-                val dialog = AlertDialog.Builder(requireActivity())
-                dialog.setTitle(getString(R.string.sign_in_required))
-                dialog.setMessage(getString(R.string.sign_in_required_message))
-                dialog.setPositiveButton(getString(R.string.sign_in)) { _, _ ->
-                    startActivity(Intent(requireContext(), Login::class.java))
-                }
-                dialog.setNegativeButton(getString(R.string.cancel)) { _, _ ->
-
-                }
-                dialog.setCancelable(false)
-                dialog.show()
-            } else {
-                val dialog = AddFriendFragmentDialog()
-                dialog.show(requireActivity().supportFragmentManager, ADD_FRIEND_DIALOG_TAG)
-            }
+        //When clicked add friend button, the user will be brought to the AddFriendsActivity
+        btnAddFriend.setOnClickListener{
+            val intent = Intent(requireActivity(), AddFriendsActivity::class.java)
+            startActivity(intent)
         }
         return ret
     }
 
+    //Generate histogram data for the graph
     private fun generateColumnData(): ColumnChartData{
         val numColumns = friendDbList.size
         val columns = mutableListOf<Column>()
