@@ -12,8 +12,6 @@ class UsageRepository(
     private val usageDao: UsageDao
 ) {
 
-    // Expose LiveData from UsageFirebaseDao for observation
-    val usageData: LiveData<List<UsageFirebase>> = usageFirebaseDao.usageData
     /**
      * returns for usage data for the given user on the given date
      * @param day

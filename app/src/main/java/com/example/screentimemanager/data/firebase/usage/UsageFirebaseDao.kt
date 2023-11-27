@@ -3,62 +3,73 @@ package com.example.screentimemanager.data.firebase.usage
 import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
+import kotlinx.coroutines.withContext
 
-class UsageFirebaseDao(
-    private val database: DatabaseReference
-) {
-    val usageRef = database.child("usages")
+class UsageFirebaseDao(private val database: DatabaseReference) {
 
-    private val _usageData = MutableLiveData<List<UsageFirebase>>()
-    val usageData: LiveData<List<UsageFirebase>> = _usageData
+    private val usageRef = database.child("usages")
 
     /**
-     * Fetches usage data for the given user on the given date and updates LiveData.
-     * @param email Email of the user whose usage data is being retrieved
+     * Get the usage data for the given user on the specified date.
+     * @param email Email of the user
      * @param day The day of the month
      * @param month The month of the year
      * @param year The year
+     * @return List of UsageFirebase objects
      */
-    fun getUsageData(email: String, day: Int, month: Int, year: Int) {
-        val userUsageRef = usageRef.child(email).child("$day/$month/$year")
+    suspend fun getUsageData(email: String, day: Int, month: Int, year: Int): List<UsageFirebase> {
+        return withContext(Dispatchers.IO) {
+            val sanitizedEmail = email.replace("@", "(").replace(".", ")")
+            val userUsageRef = usageRef.child(sanitizedEmail)
+                .child(year.toString()).child(month.toString()).child(day.toString())
+            val userSnapshot = userUsageRef.get().await()
 
-        userUsageRef.addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                val usageList = mutableListOf<UsageFirebase>()
-                for (dataSnapshot in snapshot.children) {
-                    dataSnapshot.getValue(UsageFirebase::class.java)?.let {
-                        usageList.add(it)
+            val usageList = mutableListOf<UsageFirebase>()
+
+            if (userSnapshot.exists()) {
+                for (appSnapshot in userSnapshot.children) {
+                    val appName = appSnapshot.key
+                    val usage = appSnapshot.child("usage").getValue(Long::class.java)
+                    if (appName != null && usage != null) {
+                        val usageData = UsageFirebase(email, appName, day, month, year, usage)
+                        usageList.add(usageData)
                     }
                 }
-                _usageData.postValue(usageList)
             }
 
-            override fun onCancelled(error: DatabaseError) {
-                // Handle the error, maybe updating the LiveData with an error state or logging
-            }
-        })
+            usageList
+        }
     }
 
     /**
-     * Sets the usage data for the given user on the given date.
+     * Set the usage data for the given user on the specified date.
      * @param appName The app to add to the user's list of apps
      * @param day The day of the month
      * @param month The month of the year
      * @param year The year
      * @param usage The usage time in milliseconds
      */
-    fun setUsageData(appName: String, day: Int, month: Int, year: Int, usage: Long) {
-        val email = FirebaseAuth.getInstance().currentUser?.email
-        email?.let {
-            val userUsageRef = usageRef.child(it).child("$day/$month/$year")
+    suspend fun setUsageData(appName: String, day: Int, month: Int, year: Int, usage: Long) {
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        val email = currentUser?.email ?: DEFAULT_EMAIL
+        val sanitizedEmail = email.replace("@", "(").replace(".", ")")
+        val userUsageRef = usageRef.child(sanitizedEmail)
+            .child("$year/$month/$day")
+            .child(appName)
 
-            val usageData = UsageFirebase(it, appName, day, month, year, usage)
-
-            userUsageRef.push().setValue(usageData)
-            // Note: No direct response handling here, consider adding another LiveData for status or using a different approach
+        try {
+            userUsageRef.setValue(UsageFirebase(sanitizedEmail, appName, day, month, year, usage))
+                .await()
+            Log.d(TAG, "Setting usage data for $sanitizedEmail on $day/$month/$year")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error setting usage data: ${e.message}")
         }
+    }
+
+    companion object {
+        private const val TAG = "UsageFirebaseDao"
+        private const val DEFAULT_EMAIL = "test2@gmail.com"
     }
 }
