@@ -39,8 +39,8 @@ class AddFriendsActivity : AppCompatActivity() {
         userRepository = UserRepository(userFirebaseDao)
         friendFirebaseDao = FriendFirebaseDao(firebaseRef)
         friendRepository = FriendRepository(friendFirebaseDao)
-        friendRequests = ArrayList()
-        friendRequests = friendRepository.getFriendRequestList() as ArrayList<String>
+        friendRequests = ArrayList(friendRepository.getFriendRequestList())
+        requestFriendName = ArrayList()
         for(request in friendRequests){
             requestFriendName.add(userRepository.getUser(request))
         }
