@@ -13,7 +13,6 @@ import com.example.screentimemanager.appusage.AppUsageService
 import com.example.screentimemanager.data.firebase.user.UserFirebase
 import com.example.screentimemanager.data.firebase.user.UserFirebaseDao
 import com.example.screentimemanager.databinding.ActivityMainBinding
-import com.example.screentimemanager.ui.friend.FriendFragment
 import com.google.android.material.navigation.NavigationView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseReference
@@ -79,15 +78,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-
-        // checking if the mainActivity was opened from register or login
-        //val showFriendFragment = intent.getBooleanExtra("isFriendTab", false)
-        /*if (showFriendFragment) {
-            val transaction = supportFragmentManager.beginTransaction()
-            transaction.replace(R.id.container, FriendFragment())
-            transaction.commit()
-            intent.removeExtra("isFriendTab")
-        }*/
 
 
         // start the AppUsageService

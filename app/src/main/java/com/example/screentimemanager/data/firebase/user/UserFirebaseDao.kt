@@ -17,10 +17,12 @@ class UserFirebaseDao(
      */
     suspend fun getUser(email: String): UserFirebase? {
         return withContext(Dispatchers.IO){
-            val userRef = database
+            val userRef =
+                database.child("users")
                 .child(email.replace("@","(").replace(".",")"))
                 .get().await()
-
+            println("debug: UserFirebasedao getUser for email ${email} " +
+                    "-> ${userRef.getValue(UserFirebase::class.java)}")
             userRef.getValue(UserFirebase::class.java)
         }
     }
@@ -31,21 +33,5 @@ class UserFirebaseDao(
                 .setValue(user).await()
         }
     }
-
-    suspend fun deleteUser(){
-        // TODO
-    }
-    suspend fun updateUser(){
-        // todo
-    }
-
-    suspend fun registerUser(user: UserFirebase){
-        // TODO
-    }
-
-    suspend fun login(user: UserFirebase){
-        // TODO
-    }
-
 
 }

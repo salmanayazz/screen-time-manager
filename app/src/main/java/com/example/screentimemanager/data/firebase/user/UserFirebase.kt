@@ -11,9 +11,10 @@ package com.example.screentimemanager.data.firebase.user
  * last name of the user
  */
 data class UserFirebase (
-    val email: String,
-    val firstName: String,
-    val lastName: String,
-    val password: String,
-    val profilePicture: String?
-)
+    val email: String =  "",
+    val firstName: String = "",
+    val lastName: String  = "",
+    val password: String = "",
+    val profilePicture: String? = ""){
+    constructor(): this("","","","","")
+}
