@@ -14,7 +14,7 @@ import com.example.screentimemanager.data.local.app.AppDatabase
 import com.example.screentimemanager.data.local.usage.UsageDatabase
 import com.example.screentimemanager.data.repository.AppRepository
 import com.example.screentimemanager.data.repository.UsageRepository
-import com.example.screentimemanager.ui.AppSettingViewModel
+import com.example.screentimemanager.ui.appSetting.AppSettingViewModel
 import com.example.screentimemanager.util.Compat.getParcelableExtraCompat
 import com.google.android.material.switchmaterial.SwitchMaterial
 import com.google.firebase.database.FirebaseDatabase
