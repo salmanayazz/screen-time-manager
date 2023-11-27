@@ -86,8 +86,10 @@ class FriendFragment : Fragment() {
         usageRepo = UsageRepository(usageFirebaseDao, usageDao)
         friendRepo = FriendRepository(friendDao)
 
-        CoroutineScope(IO).launch{
-            friendDbList = friendRepo.getFriendList()
+        friendRepo.getFriendList()
+
+        friendRepo.friendList.observe(requireActivity()) {
+            friendDbList = it
         }
 
         chart.columnChartData = generateColumnData()
