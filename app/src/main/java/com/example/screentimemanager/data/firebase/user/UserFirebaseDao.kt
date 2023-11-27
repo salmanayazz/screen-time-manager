@@ -12,7 +12,7 @@ class UserFirebaseDao(
      * @return
      * return the User object with the given email
      */
-    suspend fun getUser(email: String): UserFirebase {
+    fun getUser(email: String): UserFirebase {
         return UserFirebase("", "", "")
     }
 

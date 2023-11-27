@@ -1,5 +1,6 @@
 package com.example.screentimemanager.ui.friend
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -103,6 +104,7 @@ class FriendFragment : Fragment() {
             friendList.adapter = adapter
         }
 
+        //When clicking the left arrow, the date will change to the day before
         leftArrow.setOnClickListener{
             calendar.add(Calendar.DATE, -1)
             day = calendar.get(Calendar.DAY_OF_MONTH)
@@ -112,6 +114,7 @@ class FriendFragment : Fragment() {
             chart.columnChartData = generateColumnData()
         }
 
+        //When clicking the right arrow, the date will change to the day after
         rightArrow.setOnClickListener{
             calendar.add(Calendar.DATE, 1)
             day = calendar.get(Calendar.DAY_OF_MONTH)
@@ -121,34 +124,15 @@ class FriendFragment : Fragment() {
             chart.columnChartData = generateColumnData()
         }
 
-        //When clicked add friend button, if the user has signed in, it will show the AddFriendFragmentDialog
-        //Otherwise, it will show a dialog to tell the user to sign in.
-        //There will be a sign in button link to the sign in page.
-        //If the user click cancel, the dialog will be dismissed.
+        //When clicked add friend button, the user will be brought to the AddFriendsActivity
         btnAddFriend.setOnClickListener{
-            if(friendViewModel.signedIn.value == false){
-                val dialog = AlertDialog.Builder(requireActivity())
-                dialog.setTitle(getString(R.string.sign_in_required))
-                dialog.setMessage(getString(R.string.sign_in_required_message))
-                dialog.setPositiveButton(getString(R.string.sign_in)){ _, _ ->
-                    //The button is not working yet, as the sign in page is not created yet.
-                    //Intent to sign in page
-                    friendViewModel.signedIn.value = true
-                }
-                dialog.setNegativeButton(getString(R.string.cancel)){_, _ ->
-
-                }
-                dialog.setCancelable(false)
-                dialog.show()
-            }
-            else{
-                val dialog = AddFriendFragmentDialog()
-                dialog.show(requireActivity().supportFragmentManager, ADD_FRIEND_DIALOG_TAG)
-            }
+            val intent = Intent(requireActivity(), AddFriendsActivity::class.java)
+            startActivity(intent)
         }
         return ret
     }
 
+    //Generate histogram data for the graph
     private fun generateColumnData(): ColumnChartData{
         val numColumns = friendDbList.size
         val columns = mutableListOf<Column>()
