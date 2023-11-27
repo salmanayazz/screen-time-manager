@@ -22,7 +22,8 @@ class FriendFirebaseDao(
     val RECEIVER_EMAIL = "receiverEmail"
 
     private val friendsRef: DatabaseReference = database.child("friends")
-    val userEmail = FirebaseAuth.getInstance().currentUser?.email!!
+    //val userEmail = FirebaseAuth.getInstance().currentUser?.email!!
+    val userEmail = "test"
 
     private val _friendList = MutableLiveData<List<String>>()
     val friendList: LiveData<List<String>> = _friendList
