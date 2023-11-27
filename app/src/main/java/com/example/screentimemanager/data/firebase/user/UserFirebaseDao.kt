@@ -17,8 +17,9 @@ class UserFirebaseDao(
      */
     suspend fun getUser(email: String): UserFirebase? {
         return withContext(Dispatchers.IO){
-            val userRef = database.child("users")
-                .child(email).get().await()
+            val userRef = database
+                .child(email.replace("@","(").replace(".",")"))
+                .get().await()
 
             userRef.getValue(UserFirebase::class.java)
         }
