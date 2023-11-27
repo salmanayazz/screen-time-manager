@@ -1,28 +1,30 @@
 import android.util.Log
+import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import androidx.lifecycle.Observer
 import com.example.screentimemanager.data.firebase.usage.UsageFirebase
-import com.google.firebase.database.DatabaseReference
+import com.example.screentimemanager.data.firebase.usage.UsageFirebaseDao
+import com.google.firebase.database.*
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mockito.*
 import org.mockito.ArgumentCaptor
-import com.example.screentimemanager.data.firebase.usage.UsageFirebaseDao
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.ValueEventListener
 
 class UsageFirebaseDaoTest {
+    @get:Rule
+    val instantTaskExecutorRule = InstantTaskExecutorRule()
+
     private lateinit var dao: UsageFirebaseDao
     private lateinit var databaseReference: DatabaseReference
 
     @Before
     fun setUp() {
-        // Initialize the UsageFirebaseDao with a mocked DatabaseReference
         databaseReference = mock(DatabaseReference::class.java)
         dao = UsageFirebaseDao(databaseReference)
     }
 
     @Test
-    suspend fun testGetUsageData() {
-        // Mock DatabaseReference to return a sample data snapshot
+    fun testGetUsageData() {
         val dataSnapshot = mock(DataSnapshot::class.java)
         `when`(databaseReference.child(anyString())).thenReturn(databaseReference)
         `when`(databaseReference.addListenerForSingleValueEvent(any())).thenAnswer {
@@ -31,36 +33,32 @@ class UsageFirebaseDaoTest {
             null
         }
 
-        // Call the getUsageData method with sample input
-        val email = "sample@example.com"
-        val day = 1
-        val month = 1
-        val year = 2023
-        dao.getUsageData(email, day, month, year)
-        // Assert the dao returned the correct data
+        val observer: Observer<*>? = mock(Observer::class.java)
+        dao.usageData.observeForever(observer as Observer<in List<UsageFirebase>>)
 
+        dao.getUsageData("sample@example.com", 1, 1, 2023)
+
+        // Verify that LiveData was updated
+        verify(observer).onChanged(any())
     }
 
     @Test
-    suspend fun testSetUsageData() {
-        // Capture data passed to setValue
+    fun testSetUsageData() {
         val captor = ArgumentCaptor.forClass(UsageFirebase::class.java)
         `when`(databaseReference.child(anyString())).thenReturn(databaseReference)
         `when`(databaseReference.push()).thenReturn(databaseReference)
 
-        // Call the setUsageData method with sample input
-        val appName = "SampleApp"
-        val day = 1
-        val month = 1
-        val year = 2023
-        val usage = 3600000L // 1 hour
-        dao.setUsageData(appName, day, month, year, usage)
+        dao.setUsageData("SampleApp", 1, 1, 2023, 3600000L)
 
-        // Verify that the correct data was passed to setValue
         verify(databaseReference).setValue(captor.capture())
         val capturedData = captor.value
 
-        // Assert that the captured data matches the expected data
-        // Add your assertions here
+        // Add assertions to verify the captured data
+        // For example:
+        assert(capturedData.appName == "SampleApp")
+        assert(capturedData.day == 1)
+        assert(capturedData.month == 1)
+        assert(capturedData.year == 2023)
+        assert(capturedData.usage == 3600000L)
     }
 }

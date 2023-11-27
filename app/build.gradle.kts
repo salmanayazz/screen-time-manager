@@ -77,6 +77,8 @@ dependencies {
     // When using the BoM, you don't specify versions in Firebase library dependencies
     implementation("com.google.firebase:firebase-database")
     implementation("org.mockito:mockito-core:3.10.0")// Use the latest version available
+    implementation("junit:junit:4.13.2")
+    implementation("androidx.arch.core:core-testing:2.1.0")
 
 
 
