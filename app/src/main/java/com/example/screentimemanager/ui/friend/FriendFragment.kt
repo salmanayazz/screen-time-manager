@@ -17,7 +17,9 @@ import com.example.screentimemanager.data.local.usage.UsageDao
 import com.example.screentimemanager.data.local.usage.UsageDatabase
 import com.example.screentimemanager.data.repository.FriendRepository
 import com.example.screentimemanager.data.repository.UsageRepository
+import com.example.screentimemanager.ui.authentication.Login
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.CoroutineScope
@@ -52,6 +54,9 @@ class FriendFragment : Fragment() {
     private lateinit var usageRepo: UsageRepository
     private lateinit var friendDbList: List<String>
 
+
+    private lateinit var firebaseAuth: FirebaseAuth
+
     private lateinit var calendar: Calendar
     private var day = 1
     private var month = 1
@@ -61,6 +66,11 @@ class FriendFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+
+
+        firebaseAuth = FirebaseAuth.getInstance()
+        val currentUser = firebaseAuth.currentUser
+
         friends = ArrayList()
         val adapter = FriendListAdapter(requireActivity(), R.layout.layout_friend_list, friends)
         val ret = inflater.inflate(R.layout.fragment_friend, container, false)
@@ -126,8 +136,24 @@ class FriendFragment : Fragment() {
 
         //When clicked add friend button, the user will be brought to the AddFriendsActivity
         btnAddFriend.setOnClickListener{
-            val intent = Intent(requireActivity(), AddFriendsActivity::class.java)
-            startActivity(intent)
+            if (currentUser == null) {
+                // if the user has not logged in
+                // then show the dialog to sign in
+                val dialog = AlertDialog.Builder(requireActivity())
+                dialog.setTitle(getString(R.string.sign_in_required))
+                dialog.setMessage(getString(R.string.sign_in_required_message))
+                dialog.setPositiveButton(getString(R.string.sign_in)) { _, _ ->
+                    startActivity(Intent(requireContext(), Login::class.java))
+                }
+                dialog.setNegativeButton(getString(R.string.cancel)) { _, _ ->
+                }
+                dialog.setCancelable(false)
+                dialog.show()
+            } else {
+                // if they were logged already, then show the AddFriendsActivity
+                val intent = Intent(requireActivity(), AddFriendsActivity::class.java)
+                startActivity(intent)
+            }
         }
         return ret
     }
