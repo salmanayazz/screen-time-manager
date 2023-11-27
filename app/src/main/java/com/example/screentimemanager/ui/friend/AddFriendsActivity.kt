@@ -39,10 +39,14 @@ class AddFriendsActivity : AppCompatActivity() {
         userRepository = UserRepository(userFirebaseDao)
         friendFirebaseDao = FriendFirebaseDao(firebaseRef)
         friendRepository = FriendRepository(friendFirebaseDao)
-        friendRequests = ArrayList(friendRepository.getFriendRequestList())
+        friendRequests = ArrayList()
         requestFriendName = ArrayList()
         for(request in friendRequests){
             requestFriendName.add(userRepository.getUser(request))
+        }
+
+        friendRepository.friendRequestList.observe(this){
+            friendRequests = it as ArrayList<String>
         }
 
         etSearchFriend.addTextChangedListener(object: TextWatcher{
