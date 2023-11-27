@@ -28,6 +28,9 @@
         <activity
             android:name=".ui.authentication.Register"
             android:exported="false" />
+        <activity
+            android:name=".ui.friend.AddFriendsActivity"
+            android:exported="false" />
 
         <service
             android:name=".appusage.AppUsageService"

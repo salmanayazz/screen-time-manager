@@ -16,4 +16,8 @@
     <string name="Date">Date</string>
     <string name="right_arrow"><![CDATA[>]]></string>
     <string name="usage">Usage</string>
+    <string name="friend_request">Friend Request</string>
+    <string name="search_friend">Search friend</string>
+    <string name="accept_request">Accept friend request</string>
+    <string name="decline_request">Decline friend request</string>
 </resources>
