@@ -23,7 +23,7 @@ class AppFirebaseDao(
      * @return
      * the time limit in milliseconds
      */
-    suspend fun getAppLimit(appName: String): Long {
+    suspend fun getAppLimit(appName: String): Long? {
         return 0
     }
 

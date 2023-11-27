@@ -1,9 +1,15 @@
 package com.example.screentimemanager.data.repository
 
 import com.example.screentimemanager.data.firebase.app.AppFirebaseDao
+import com.example.screentimemanager.data.local.app.App
+import com.example.screentimemanager.data.local.app.AppDao
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class AppRepository (
-    private val appDao: AppFirebaseDao
+    private val appFirebaseDao: AppFirebaseDao,
+    private val appDao: AppDao
 ) {
     /**
      * @param appName
@@ -11,6 +17,11 @@ class AppRepository (
      */
     suspend fun addApp(appName: String) {
         appDao.addApp(appName)
+        appFirebaseDao.addApp(appName)
+    }
+
+    fun getApp(appName: String): App? {
+        return appDao.getApp(appName)
     }
 
     /**
@@ -20,7 +31,7 @@ class AppRepository (
      * @return
      * the time limit in milliseconds
      */
-    suspend fun getAppLimit(appName: String): Long {
+    fun getAppLimit(appName: String): Long? {
         return appDao.getAppLimit(appName)
     }
 
@@ -33,7 +44,10 @@ class AppRepository (
      * @param timeLimit
      * app time limit per day in milliseconds
      */
-    suspend fun setAppLimit(app: String, hasLimit: Boolean, timeLimit: Long) {
-        appDao.setAppLimit(app, hasLimit, timeLimit)
+    suspend fun setAppLimit(appName: String, hasLimit: Boolean, timeLimit: Long) {
+        CoroutineScope(Dispatchers.IO).launch {
+            appDao.setAppLimit(appName, hasLimit, timeLimit)
+            appFirebaseDao.setAppLimit(appName, hasLimit, timeLimit)
+        }
     }
 }

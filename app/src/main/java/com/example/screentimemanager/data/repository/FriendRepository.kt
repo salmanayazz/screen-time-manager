@@ -43,6 +43,6 @@ class FriendRepository(
      * declines friend request/removes friend with the given email
      */
     suspend fun deleteFriend(email: String) {
-
+        friendDao.deleteFriend(email)
     }
 }

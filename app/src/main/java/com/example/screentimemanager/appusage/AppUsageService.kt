@@ -22,19 +22,35 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.WindowManager
 import com.example.screentimemanager.R
+import com.example.screentimemanager.data.firebase.app.AppFirebaseDao
+import com.example.screentimemanager.data.firebase.usage.UsageFirebaseDao
+import com.example.screentimemanager.data.local.app.AppDao
+import com.example.screentimemanager.data.local.app.AppDatabase
+import com.example.screentimemanager.data.local.usage.Usage
+import com.example.screentimemanager.data.local.usage.UsageDao
+import com.example.screentimemanager.data.local.usage.UsageDatabase
+import com.example.screentimemanager.data.repository.AppRepository
+import com.example.screentimemanager.data.repository.UsageRepository
+import com.example.screentimemanager.util.Util.getCurrentDate
+import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 import java.util.Calendar
 import java.util.SortedMap
+import java.util.TimeZone
 import java.util.Timer
 import java.util.TimerTask
 import java.util.TreeMap
 
 
 class AppUsageService : Service() {
+    private lateinit var appRepository: AppRepository
+    private lateinit var usageRepository: UsageRepository
     private val usageStatsManager by lazy { getSystemService(USAGE_STATS_SERVICE) as UsageStatsManager }
     private val overlayView by lazy { LayoutInflater.from(this).inflate(R.layout.time_limit_overlay, null) }
     private val windowManager by lazy { getSystemService(Context.WINDOW_SERVICE) as WindowManager }
@@ -50,6 +66,7 @@ class AppUsageService : Service() {
             isServiceRunning = true
 
             requestPermissions()
+            setupRepo()
             startAppTracking()
 
             previousApp = getCurrentAppInUse()
@@ -64,6 +81,22 @@ class AppUsageService : Service() {
         }
 
         return START_STICKY
+    }
+
+    /**
+     * sets up the app and usage repositories
+     */
+    private fun setupRepo() {
+        val appDatabase = AppDatabase.getInstance(this)
+        val firebaseDatabase = FirebaseDatabase.getInstance()
+        val appFirebaseDao = AppFirebaseDao(firebaseDatabase.reference)
+        val appDao = appDatabase.appDao
+        appRepository = AppRepository(appFirebaseDao, appDao)
+
+        val usageDatabase = UsageDatabase.getInstance(this)
+        val usageFirebaseDao = UsageFirebaseDao(firebaseDatabase.reference)
+        val usageDao = usageDatabase.usageDao
+        usageRepository = UsageRepository(usageFirebaseDao, usageDao)
     }
 
     /**
@@ -121,39 +154,67 @@ class AppUsageService : Service() {
      * if the time limit for the current app is reached
      */
     private fun timeLimitIsReached(): Boolean {
-        val usageStatsList = getTodaysUsageStats()
-
         var currentApp = getCurrentAppInUse()
 
+        val (day, month, year) = getCurrentDate()
+
         // get usage details for currentApp
-        var appUsage = usageStatsList.find() {
-            it.packageName == currentApp
+        var appUsage = usageRepository.getUsageData(day, month, year).find() {
+            it.appName == currentApp
         }
 
         if (appUsage != null) {
-            var totalTime = appUsage.totalTimeInForeground
+            var totalTime = appUsage.usage
 
             // if app was already opened since last poll, use a timer to calculate
             // its current usage since UsageStatsManager only updates its times when a user
             // exits and reenters the app
-            if (previousApp == currentApp) {
-                totalTime +=  System.currentTimeMillis() - previousAppTimestamp
-            } else {
+            totalTime +=  System.currentTimeMillis() - previousAppTimestamp
+            if (previousApp != currentApp) {
+                saveUsageData(previousApp, totalTime)
                 previousApp = currentApp
                 previousAppTimestamp = System.currentTimeMillis()
             }
 
             Log.i(TAG, "App $currentApp usage is $totalTime")
 
-            // TODO: remove this hardcoded (1000 * 20) value
-            if (totalTime > (1000 * 5) && appUsage.packageName != this.packageName) {
-                return true;
+            // check if app has a time limit, and if the time limit is reached
+            val appEntry = appRepository.getApp(appUsage.appName)
+
+            if (appEntry != null && appEntry.hasLimit) {
+                val timeLimit = appEntry.timeLimit
+                Log.i(TAG, "App time limit is $timeLimit")
+                if (totalTime > timeLimit && appUsage.appName != this.packageName) {
+                    return true;
+                }
             }
         } else {
             Log.e(TAG, "App $currentApp does not exist")
         }
 
         return false;
+    }
+
+    /**
+     * @param appName
+     * saves the today's usage data for the given app
+     */
+    private fun saveUsageData(appName: String?, usageTime: Long) {
+        if (appName == null) { return }
+
+        val (day, month, year) = getCurrentDate()
+
+        CoroutineScope(IO).launch {
+            Log.i(TAG, "Saved app $appName usage time ${usageTime}")
+
+            // check if app is in db, if not create entry
+            var returnedApp = appRepository.getApp(appName)
+            if (returnedApp == null) {
+                appRepository.addApp(appName)
+            }
+            // save usage value
+            usageRepository.setUsageData(appName, day, month, year, usageTime)
+        }
     }
 
     /**
@@ -195,9 +256,11 @@ class AppUsageService : Service() {
         // query the app usage statistics for the specified time range
         return usageStatsManager.queryUsageStats(
             UsageStatsManager.INTERVAL_DAILY, startTime, currentTime
-        )
-        
+        )   
     }
+
+
+
 
     /**
      * checks if the usage access permission is granted
@@ -221,8 +284,8 @@ class AppUsageService : Service() {
         try {
             if (!overlayView.isAttachedToWindow) {
                 val params = WindowManager.LayoutParams(
-                    WindowManager.LayoutParams.WRAP_CONTENT, // TODO: temporarily set to WRAP_CONTENT
-                    WindowManager.LayoutParams.WRAP_CONTENT,
+                    WindowManager.LayoutParams.MATCH_PARENT,
+                    WindowManager.LayoutParams.MATCH_PARENT,
                     WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
                     WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
                     PixelFormat.TRANSLUCENT

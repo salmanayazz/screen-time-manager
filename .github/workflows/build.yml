@@ -21,6 +21,10 @@ jobs:
         distribution: 'adopt'
         cache: gradle
 
+    - name: Set up Android SDK (for local act action testing)
+      if: ${{ env.ACT }}
+      uses: android-actions/setup-android@v2
+
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
 
