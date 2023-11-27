@@ -102,9 +102,9 @@ class FriendFragment : Fragment() {
             friendList.adapter = adapter
         }
 
-        friendRepo.getFriendRequestList()
+        friendRepo.getFriendList()
 
-        friendRepo.friendRequests.observe(requireActivity()) {
+        friendRepo.friendList.observe(requireActivity()) {
             println(it)
             println("friend reqs")
         }

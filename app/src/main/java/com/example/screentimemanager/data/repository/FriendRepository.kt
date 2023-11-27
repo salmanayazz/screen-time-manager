@@ -7,12 +7,14 @@ import com.example.screentimemanager.data.firebase.user.UserFirebase
 class FriendRepository(
     private val friendDao: FriendFirebaseDao
 ) {
-    val friendRequests: LiveData<List<String>> = friendDao.friendRequests
+    val friendList: LiveData<List<String>> = friendDao.friendList
+    val friendRequestList: LiveData<List<String>> = friendDao.friendRequestList
+
     /**
      * @return
      * return list of the user's friends
      */
-    fun getFriendList(): List<String> {
+    fun getFriendList() {
         return friendDao.getFriendList()
     }
 
