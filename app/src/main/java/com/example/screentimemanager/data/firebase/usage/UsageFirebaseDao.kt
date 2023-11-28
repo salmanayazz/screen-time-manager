@@ -9,7 +9,7 @@ import kotlinx.coroutines.withContext
 
 class UsageFirebaseDao(private val database: DatabaseReference) {
 
-    private val usageRef = database.child("usages")
+    val usageRef = database.child("usages")
 
     /**
      * Get the usage data for the given user on the specified date.
