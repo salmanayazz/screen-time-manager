@@ -1,13 +1,11 @@
 package com.example.screentimemanager.data.repository
 
+import androidx.lifecycle.LiveData
 import com.example.screentimemanager.data.firebase.usage.UsageFirebase
 import com.example.screentimemanager.data.firebase.usage.UsageFirebaseDao
 import com.example.screentimemanager.data.local.usage.Usage
 import com.example.screentimemanager.data.local.usage.UsageDao
-import com.google.firebase.auth.FirebaseAuth
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 class UsageRepository(
     private val usageFirebaseDao: UsageFirebaseDao,
@@ -29,6 +27,7 @@ class UsageRepository(
         return usageDao.getUsageData(day, month, year)
     }
 
+
     /**
      * returns for usage data for the given user on the given date
      * @param email
@@ -42,8 +41,10 @@ class UsageRepository(
      * @return
      * return list of the user's usage data
      */
-    fun getUsageData(email: String, day: Int, month: Int, year: Int): List<UsageFirebase> {
-        return usageFirebaseDao.getUsageData(email, day, month, year)
+    suspend fun getUsageData(email: String, day: Int, month: Int, year: Int): List<UsageFirebase> {
+        val userUsageRef = usageFirebaseDao.usageRef.child(email).child("$day/$month/$year")
+        val snapshot = userUsageRef.get().await()
+        return snapshot.children.mapNotNull { it.getValue(UsageFirebase::class.java) }
     }
 
     /**
@@ -61,9 +62,10 @@ class UsageRepository(
      * the usage time in milliseconds
      */
     suspend fun setUsageData(appName: String, day: Int, month: Int, year: Int, usage: Long) {
-        CoroutineScope(Dispatchers.IO).launch {
-            usageDao.setUsageData(appName, day, month, year, usage)
-            usageFirebaseDao.setUsageData(appName, day, month, year, usage)
-        }
+        // Update local database
+        usageDao.setUsageData(appName, day, month, year, usage)
+
+        // Update Firebase data
+        usageFirebaseDao.setUsageData(appName, day, month, year, usage)
     }
 }

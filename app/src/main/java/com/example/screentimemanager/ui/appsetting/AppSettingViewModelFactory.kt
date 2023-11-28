@@ -1,4 +1,4 @@
-package com.example.screentimemanager.ui.appsetting
+package com.example.screentimemanager.ui.appSetting
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider

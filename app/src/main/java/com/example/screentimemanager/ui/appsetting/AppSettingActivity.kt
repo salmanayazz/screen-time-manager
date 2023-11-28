@@ -15,7 +15,9 @@ import com.example.screentimemanager.data.local.usage.UsageDatabase
 import com.example.screentimemanager.data.repository.AppRepository
 import com.example.screentimemanager.data.repository.UsageRepository
 import com.example.screentimemanager.ui.appSetting.AppSettingViewModel
+import com.example.screentimemanager.ui.appSetting.AppSettingViewModelFactory
 import com.example.screentimemanager.util.Compat.getParcelableExtraCompat
+
 import com.google.android.material.switchmaterial.SwitchMaterial
 import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.CoroutineScope
