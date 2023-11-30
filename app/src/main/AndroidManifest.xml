@@ -38,7 +38,7 @@
             android:exported="true" />
 
         <activity
-            android:name=".ui.appsetting.AppSettingActivity"
+            android:name=".ui.appsettings.AppSettingsActivity"
             android:exported="false" />
         <activity
             android:name=".MainActivity"

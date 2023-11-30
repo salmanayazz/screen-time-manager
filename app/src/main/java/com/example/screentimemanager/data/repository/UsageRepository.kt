@@ -7,7 +7,7 @@ import com.example.screentimemanager.data.local.usage.Usage
 import com.example.screentimemanager.data.local.usage.UsageDao
 import kotlinx.coroutines.tasks.await
 
-class UsageRepository(
+open class UsageRepository(
     private val usageFirebaseDao: UsageFirebaseDao,
     private val usageDao: UsageDao
 ) {

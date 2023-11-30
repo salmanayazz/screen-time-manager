@@ -1,7 +1,9 @@
-package com.example.screentimemanager.ui.appsetting
+package com.example.screentimemanager.ui.appsettings
 
+import android.content.ContentValues.TAG
 import android.content.pm.ApplicationInfo
 import android.os.Bundle
+import android.util.Log
 import android.widget.Button
 import android.widget.NumberPicker
 import android.widget.TextView
@@ -14,24 +16,25 @@ import com.example.screentimemanager.data.local.app.AppDatabase
 import com.example.screentimemanager.data.local.usage.UsageDatabase
 import com.example.screentimemanager.data.repository.AppRepository
 import com.example.screentimemanager.data.repository.UsageRepository
-import com.example.screentimemanager.ui.appSetting.AppSettingViewModel
-import com.example.screentimemanager.ui.appSetting.AppSettingViewModelFactory
 import com.example.screentimemanager.util.Compat.getParcelableExtraCompat
 
 import com.google.android.material.switchmaterial.SwitchMaterial
 import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 
-class AppSettingActivity : AppCompatActivity() {
+class AppSettingsActivity : AppCompatActivity() {
     companion object {
+        lateinit var appSettingsViewModelFactory: AppSettingsViewModelFactory
         val APPLICATION_INFO = "application-info"
     }
 
     private var application : ApplicationInfo? = null
-    private lateinit var appSettingViewModel: AppSettingViewModel
+    lateinit var appSettingsViewModel: AppSettingsViewModel
 
     private val hourSelector: NumberPicker by lazy { this.findViewById(R.id.application_hour_limit)}
     private val minuteSelector: NumberPicker by lazy { this.findViewById(R.id.application_minute_limit)}
@@ -66,13 +69,13 @@ class AppSettingActivity : AppCompatActivity() {
             val usageFirebaseDao = UsageFirebaseDao(firebaseDatabase.reference)
             val usageDao = usageDatabase.usageDao
             val usageRepository = UsageRepository(usageFirebaseDao, usageDao)
-            val appSettingViewModelFactory = AppSettingViewModelFactory(appRepository, usageRepository)
+            appSettingsViewModelFactory = AppSettingsViewModelFactory(appRepository, usageRepository)
 
             // create the view model
-            appSettingViewModel = ViewModelProvider(
+            appSettingsViewModel = ViewModelProvider(
                 this,
-                appSettingViewModelFactory
-            )[AppSettingViewModel::class.java]
+                appSettingsViewModelFactory
+            )[AppSettingsViewModel::class.java]
     }
 
     /**
@@ -82,45 +85,58 @@ class AppSettingActivity : AppCompatActivity() {
         if (application == null) { return }
         CoroutineScope(IO).launch {
             // set the number picker max and min values
-            hourSelector.minValue = 0
-            hourSelector.maxValue = 23
-            minuteSelector.minValue = 0
-            minuteSelector.maxValue = 59
+            withContext(Dispatchers.Main) {
+                hourSelector.minValue = 0
+                hourSelector.maxValue = 23
+                minuteSelector.minValue = 0
+                minuteSelector.maxValue = 59
+            }
 
             // set the app usage data
-            val usageMillisec = appSettingViewModel.getAppUsage(application!!.packageName)
+            val usageMillisec = appSettingsViewModel.getAppUsage(application!!.packageName)
             val hoursUsage = (usageMillisec / (1000 * 60 * 60))
             val minutesUsage = (usageMillisec / (1000 * 60)) - (hoursUsage * 60)
 
             val formattedHours = String.format("%02d", hoursUsage)
             val formattedMinutes = String.format("%02d", minutesUsage)
-            todaysUsage.text = "$formattedHours : $formattedMinutes"
+
+            withContext(Dispatchers.Main) {
+                todaysUsage.text = "$formattedHours : $formattedMinutes"
+            }
 
             // set the number pickers to the previous time limit the user picked
-            val appData = appSettingViewModel.getAppData(application!!.packageName) ?: return@launch
+            val appData = appSettingsViewModel.getAppData(application!!.packageName) ?: return@launch
             val hoursLimit = (appData.timeLimit / (1000 * 60 * 60))
             val minutesLimit = (appData.timeLimit / (1000 * 60)) - (hoursLimit * 60)
-            hourSelector.value = hoursLimit.toInt()
-            minuteSelector.value = minutesLimit.toInt()
 
-            enableTimeLimit.isChecked = appData.hasLimit
+            withContext(Dispatchers.Main) {
+                hourSelector.value = hoursLimit.toInt()
+                minuteSelector.value = minutesLimit.toInt()
+                enableTimeLimit.isChecked = appData.hasLimit
+            }
         }
     }
-    
+
+
     /**
      * sets up the listeners for the submit and cancel buttons
      */
     private fun setupListeners() {
         submitBtn.setOnClickListener() {
-            if (application == null) { return@setOnClickListener }
+            if (application == null) {
+                Log.e(TAG, "application was null")
+                return@setOnClickListener
+            }
+            Log.i(TAG, "Saving settings for app ${application!!.packageName}")
             val timeLimit = (hourSelector.value * 60 * 60 * 1000 + minuteSelector.value * 60 * 1000).toLong()
             val hasLimit = enableTimeLimit.isChecked
             
-            appSettingViewModel.setTimeLimit(application!!.packageName, hasLimit, timeLimit)
+            appSettingsViewModel.setTimeLimit(application!!.packageName, hasLimit, timeLimit)
             finish()
         }
         cancelBtn.setOnClickListener() {
             finish()
         }
     }
+
 }

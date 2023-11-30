@@ -7,7 +7,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-class AppRepository (
+open class AppRepository (
     private val appFirebaseDao: AppFirebaseDao,
     private val appDao: AppDao
 ) {

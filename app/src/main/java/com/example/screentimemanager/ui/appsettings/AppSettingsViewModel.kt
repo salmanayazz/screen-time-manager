@@ -1,4 +1,4 @@
-package com.example.screentimemanager.ui.appSetting
+package com.example.screentimemanager.ui.appsettings
 
 import androidx.lifecycle.ViewModel
 import com.example.screentimemanager.data.local.app.App
@@ -9,25 +9,25 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
 
-class AppSettingViewModel(
+open class AppSettingsViewModel(
     private val appRepository: AppRepository,
-    private val usageRepository: UsageRepository
+    private val usageRepository: UsageRepository?
 ): ViewModel() {
-    fun getAppUsage(appName: String): Long {
+    open fun getAppUsage(appName: String): Long {
         val (day, month, year) = getCurrentDate()
-        val usageData = usageRepository.getUsageData(day, month, year)
-        return usageData.find {
+        val usageData = usageRepository?.getUsageData(day, month, year)
+        return usageData?.find {
             it.appName == appName
         }?.usage ?: 0
     }
 
-    fun setTimeLimit(appName: String, hasLimit: Boolean, timeLimit: Long) {
+    open fun setTimeLimit(appName: String, hasLimit: Boolean, timeLimit: Long) {
         CoroutineScope(IO).launch {
             appRepository.setAppLimit(appName, hasLimit, timeLimit)
         }
     }
 
-    fun getAppData(appName: String): App? {
+    open fun getAppData(appName: String): App? {
         return appRepository.getApp(appName)
     }
 }
