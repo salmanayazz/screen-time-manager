@@ -13,7 +13,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.example.screentimemanager.R
 import com.example.screentimemanager.databinding.FragmentHomeBinding
-import com.example.screentimemanager.ui.appsetting.AppSettingActivity
+import com.example.screentimemanager.ui.appsettings.AppSettingsActivity
 import com.example.screentimemanager.util.UserApplicationsAdapter
 import com.example.screentimemanager.util.Util
 
@@ -58,8 +58,8 @@ class HomeFragment : Fragment() {
         appListView.setOnItemClickListener(){_, _, position, _ ->
 
             val selectedApplication: ApplicationInfo = applicationsAdapter.getItem(position)
-            val intent: Intent = Intent(activity,AppSettingActivity::class.java)
-                .putExtra(AppSettingActivity.APPLICATION_INFO, selectedApplication)
+            val intent: Intent = Intent(activity, AppSettingsActivity::class.java)
+                .putExtra(AppSettingsActivity.APPLICATION_INFO, selectedApplication)
             startActivity(intent)
         }
 

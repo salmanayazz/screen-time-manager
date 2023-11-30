@@ -1,7 +1,10 @@
-package com.example.screentimemanager.ui.appsetting
+package com.example.screentimemanager.ui.appsettings
 
+import android.content.ContentValues.TAG
 import android.content.pm.ApplicationInfo
 import android.os.Bundle
+import android.os.Looper
+import android.util.Log
 import android.widget.Button
 import android.widget.NumberPicker
 import android.widget.TextView
@@ -14,24 +17,23 @@ import com.example.screentimemanager.data.local.app.AppDatabase
 import com.example.screentimemanager.data.local.usage.UsageDatabase
 import com.example.screentimemanager.data.repository.AppRepository
 import com.example.screentimemanager.data.repository.UsageRepository
-import com.example.screentimemanager.ui.appSetting.AppSettingViewModel
-import com.example.screentimemanager.ui.appSetting.AppSettingViewModelFactory
 import com.example.screentimemanager.util.Compat.getParcelableExtraCompat
 
 import com.google.android.material.switchmaterial.SwitchMaterial
 import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
-
-class AppSettingActivity : AppCompatActivity() {
+open class AppSettingsActivity : AppCompatActivity() {
     companion object {
         val APPLICATION_INFO = "application-info"
     }
 
     private var application : ApplicationInfo? = null
-    private lateinit var appSettingViewModel: AppSettingViewModel
+    open lateinit var appSettingsViewModel: AppSettingsViewModel
 
     private val hourSelector: NumberPicker by lazy { this.findViewById(R.id.application_hour_limit)}
     private val minuteSelector: NumberPicker by lazy { this.findViewById(R.id.application_minute_limit)}
@@ -47,7 +49,7 @@ class AppSettingActivity : AppCompatActivity() {
         // getting the application clicked
         application = intent.getParcelableExtraCompat(APPLICATION_INFO, ApplicationInfo::class.java)
 
-        setupMVVM()
+        _setupMVVM()
         setupUI()
         setupListeners()
     }
@@ -55,72 +57,99 @@ class AppSettingActivity : AppCompatActivity() {
     /**
      * sets up the view model
      */
-    private fun setupMVVM() {
-            val appDatabase = AppDatabase.getInstance(this)
-            val firebaseDatabase = FirebaseDatabase.getInstance()
-            val appFirebaseDao = AppFirebaseDao(firebaseDatabase.reference)
-            val appDao = appDatabase.appDao
-            val appRepository = AppRepository(appFirebaseDao, appDao)
+    private var _setupMVVM: () -> Unit = {
+        println("I have runned")
+        val appDatabase = AppDatabase.getInstance(this)
+        val firebaseDatabase = FirebaseDatabase.getInstance()
+        val appFirebaseDao = AppFirebaseDao(firebaseDatabase.reference)
+        val appDao = appDatabase.appDao
+        val appRepository = AppRepository(appFirebaseDao, appDao)
 
-            val usageDatabase = UsageDatabase.getInstance(this)
-            val usageFirebaseDao = UsageFirebaseDao(firebaseDatabase.reference)
-            val usageDao = usageDatabase.usageDao
-            val usageRepository = UsageRepository(usageFirebaseDao, usageDao)
-            val appSettingViewModelFactory = AppSettingViewModelFactory(appRepository, usageRepository)
+        val usageDatabase = UsageDatabase.getInstance(this)
+        val usageFirebaseDao = UsageFirebaseDao(firebaseDatabase.reference)
+        val usageDao = usageDatabase.usageDao
+        val usageRepository = UsageRepository(usageFirebaseDao, usageDao)
+        val appSettingsViewModelFactory = AppSettingsViewModelFactory(appRepository, usageRepository)
 
-            // create the view model
-            appSettingViewModel = ViewModelProvider(
-                this,
-                appSettingViewModelFactory
-            )[AppSettingViewModel::class.java]
+        // create the view model
+        appSettingsViewModel = ViewModelProvider(
+            this,
+            appSettingsViewModelFactory
+        )[AppSettingsViewModel::class.java]
+    }
+
+    fun setSetupFunction(setupFunction: () -> Unit) {
+        _setupMVVM = setupFunction
+    }
+
+    fun invokeSetup() {
+        _setupMVVM()
     }
 
     /**
      * adds the data to the UI
      */
-    private fun setupUI() {
+    fun setupUI() {
         if (application == null) { return }
-        CoroutineScope(IO).launch {
-            // set the number picker max and min values
+
+        // set the number picker max and min values on the main thread
+        runOnUiThread {
             hourSelector.minValue = 0
             hourSelector.maxValue = 23
             minuteSelector.minValue = 0
             minuteSelector.maxValue = 59
+        }
 
+        CoroutineScope(IO).launch {
             // set the app usage data
-            val usageMillisec = appSettingViewModel.getAppUsage(application!!.packageName)
+            val usageMillisec = appSettingsViewModel.getAppUsage(application!!.packageName)
             val hoursUsage = (usageMillisec / (1000 * 60 * 60))
             val minutesUsage = (usageMillisec / (1000 * 60)) - (hoursUsage * 60)
 
             val formattedHours = String.format("%02d", hoursUsage)
             val formattedMinutes = String.format("%02d", minutesUsage)
-            todaysUsage.text = "$formattedHours : $formattedMinutes"
+
+            // update UI on the main thread
+            runOnUiThread {
+                todaysUsage.text = "$formattedHours : $formattedMinutes"
+            }
 
             // set the number pickers to the previous time limit the user picked
-            val appData = appSettingViewModel.getAppData(application!!.packageName) ?: return@launch
+            val appData = appSettingsViewModel.getAppData(application!!.packageName) ?: return@launch
             val hoursLimit = (appData.timeLimit / (1000 * 60 * 60))
             val minutesLimit = (appData.timeLimit / (1000 * 60)) - (hoursLimit * 60)
-            hourSelector.value = hoursLimit.toInt()
-            minuteSelector.value = minutesLimit.toInt()
 
-            enableTimeLimit.isChecked = appData.hasLimit
+            // update UI on the main thread
+            runOnUiThread {
+                hourSelector.value = hoursLimit.toInt()
+                minuteSelector.value = minutesLimit.toInt()
+                enableTimeLimit.isChecked = appData.hasLimit
+            }
         }
     }
-    
+
+
+
+
     /**
      * sets up the listeners for the submit and cancel buttons
      */
     private fun setupListeners() {
         submitBtn.setOnClickListener() {
-            if (application == null) { return@setOnClickListener }
+            if (application == null) {
+                Log.e(TAG, "application was null")
+                return@setOnClickListener
+            }
+            Log.i(TAG, "Saving settings for app ${application!!.packageName}")
             val timeLimit = (hourSelector.value * 60 * 60 * 1000 + minuteSelector.value * 60 * 1000).toLong()
             val hasLimit = enableTimeLimit.isChecked
             
-            appSettingViewModel.setTimeLimit(application!!.packageName, hasLimit, timeLimit)
+            appSettingsViewModel.setTimeLimit(application!!.packageName, hasLimit, timeLimit)
             finish()
         }
         cancelBtn.setOnClickListener() {
             finish()
         }
     }
+
 }

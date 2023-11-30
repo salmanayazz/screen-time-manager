@@ -1,24 +1,23 @@
-package com.example.screentimemanager.ui.appSetting
+package com.example.screentimemanager.ui.appsettings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.screentimemanager.data.repository.AppRepository
 import com.example.screentimemanager.data.repository.UsageRepository
-import com.example.screentimemanager.ui.appSetting.AppSettingViewModel
 
 
 /**
  * factory for creating ViewModels for use with the repositories
  */
-class AppSettingViewModelFactory (
+open class AppSettingsViewModelFactory (
     private val appRepository: AppRepository,
     private val usageRepository: UsageRepository
 ) : ViewModelProvider.Factory {
     override fun<T: ViewModel> create (modelClass: Class<T>) : T {
-        if (modelClass.isAssignableFrom(AppSettingViewModel::class.java)) {
-            return AppSettingViewModel(appRepository, usageRepository) as T
+        if (modelClass.isAssignableFrom(AppSettingsViewModel::class.java)) {
+            return AppSettingsViewModel(appRepository, usageRepository) as T
         }
 
-        throw IllegalArgumentException("Error with AppSettingViewModelFactory class")
+        throw IllegalArgumentException("Error with AppSettingsViewModelFactory class")
     }
 }
