@@ -13,8 +13,13 @@ open class AppSettingsViewModel(
     private val appRepository: AppRepository,
     private val usageRepository: UsageRepository
 ): ViewModel() {
+    /**
+     * get the usage of the app for the current day
+     * @param appName
+     * the name of the app
+     * @return the usage of the app for the current day in milliseconds
+     */
     open fun getAppUsage(appName: String): Long {
-        println("original has runned")
         val (day, month, year) = getCurrentDate()
         val usageData = usageRepository.getUsageData(day, month, year)
         return usageData.find {
@@ -22,12 +27,27 @@ open class AppSettingsViewModel(
         }?.usage ?: 0
     }
 
+    /**
+     * set the time limit for the app
+     * @param appName 
+     * the name of the app
+     * @param hasLimit 
+     * whether the app has a time limit
+     * @param timeLimit 
+     * the time limit for the app
+     */
     open fun setTimeLimit(appName: String, hasLimit: Boolean, timeLimit: Long) {
         CoroutineScope(IO).launch {
             appRepository.setAppLimit(appName, hasLimit, timeLimit)
         }
     }
 
+    /**
+     * get the app data
+     * @param appName 
+     * the name of the app
+     * @return the app data
+     */
     open fun getAppData(appName: String): App? {
         return appRepository.getApp(appName)
     }
