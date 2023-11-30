@@ -36,7 +36,14 @@ jobs:
     - name: Build and test
       run: |
         ./gradlew clean assembleDebug
-        ./gradlew testDebug
+        ./gradlew testDebugUnitTest
+        ./gradlew connectedDebugAndroidTest
+
+    - name: Set up Android Emulator
+      uses: reactivecircus/android-emulator-runner@v2
+      with:
+        api-level: 34
+        script: ./gradlew connectedCheck
 
     - name: Upload Release Asset
       id: create_release
