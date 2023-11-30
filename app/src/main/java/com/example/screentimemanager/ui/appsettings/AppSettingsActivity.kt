@@ -3,6 +3,7 @@ package com.example.screentimemanager.ui.appsettings
 import android.content.ContentValues.TAG
 import android.content.pm.ApplicationInfo
 import android.os.Bundle
+import android.os.Looper
 import android.util.Log
 import android.widget.Button
 import android.widget.NumberPicker
@@ -26,15 +27,13 @@ import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-
-class AppSettingsActivity : AppCompatActivity() {
+open class AppSettingsActivity : AppCompatActivity() {
     companion object {
-        lateinit var appSettingsViewModelFactory: AppSettingsViewModelFactory
         val APPLICATION_INFO = "application-info"
     }
 
     private var application : ApplicationInfo? = null
-    lateinit var appSettingsViewModel: AppSettingsViewModel
+    open lateinit var appSettingsViewModel: AppSettingsViewModel
 
     private val hourSelector: NumberPicker by lazy { this.findViewById(R.id.application_hour_limit)}
     private val minuteSelector: NumberPicker by lazy { this.findViewById(R.id.application_minute_limit)}
@@ -50,7 +49,7 @@ class AppSettingsActivity : AppCompatActivity() {
         // getting the application clicked
         application = intent.getParcelableExtraCompat(APPLICATION_INFO, ApplicationInfo::class.java)
 
-        setupMVVM()
+        _setupMVVM()
         setupUI()
         setupListeners()
     }
@@ -58,40 +57,50 @@ class AppSettingsActivity : AppCompatActivity() {
     /**
      * sets up the view model
      */
-    private fun setupMVVM() {
-            val appDatabase = AppDatabase.getInstance(this)
-            val firebaseDatabase = FirebaseDatabase.getInstance()
-            val appFirebaseDao = AppFirebaseDao(firebaseDatabase.reference)
-            val appDao = appDatabase.appDao
-            val appRepository = AppRepository(appFirebaseDao, appDao)
+    private var _setupMVVM: () -> Unit = {
+        println("I have runned")
+        val appDatabase = AppDatabase.getInstance(this)
+        val firebaseDatabase = FirebaseDatabase.getInstance()
+        val appFirebaseDao = AppFirebaseDao(firebaseDatabase.reference)
+        val appDao = appDatabase.appDao
+        val appRepository = AppRepository(appFirebaseDao, appDao)
 
-            val usageDatabase = UsageDatabase.getInstance(this)
-            val usageFirebaseDao = UsageFirebaseDao(firebaseDatabase.reference)
-            val usageDao = usageDatabase.usageDao
-            val usageRepository = UsageRepository(usageFirebaseDao, usageDao)
-            appSettingsViewModelFactory = AppSettingsViewModelFactory(appRepository, usageRepository)
+        val usageDatabase = UsageDatabase.getInstance(this)
+        val usageFirebaseDao = UsageFirebaseDao(firebaseDatabase.reference)
+        val usageDao = usageDatabase.usageDao
+        val usageRepository = UsageRepository(usageFirebaseDao, usageDao)
+        val appSettingsViewModelFactory = AppSettingsViewModelFactory(appRepository, usageRepository)
 
-            // create the view model
-            appSettingsViewModel = ViewModelProvider(
-                this,
-                appSettingsViewModelFactory
-            )[AppSettingsViewModel::class.java]
+        // create the view model
+        appSettingsViewModel = ViewModelProvider(
+            this,
+            appSettingsViewModelFactory
+        )[AppSettingsViewModel::class.java]
+    }
+
+    fun setSetupFunction(setupFunction: () -> Unit) {
+        _setupMVVM = setupFunction
+    }
+
+    fun invokeSetup() {
+        _setupMVVM()
     }
 
     /**
      * adds the data to the UI
      */
-    private fun setupUI() {
+    fun setupUI() {
         if (application == null) { return }
-        CoroutineScope(IO).launch {
-            // set the number picker max and min values
-            withContext(Dispatchers.Main) {
-                hourSelector.minValue = 0
-                hourSelector.maxValue = 23
-                minuteSelector.minValue = 0
-                minuteSelector.maxValue = 59
-            }
 
+        // set the number picker max and min values on the main thread
+        runOnUiThread {
+            hourSelector.minValue = 0
+            hourSelector.maxValue = 23
+            minuteSelector.minValue = 0
+            minuteSelector.maxValue = 59
+        }
+
+        CoroutineScope(IO).launch {
             // set the app usage data
             val usageMillisec = appSettingsViewModel.getAppUsage(application!!.packageName)
             val hoursUsage = (usageMillisec / (1000 * 60 * 60))
@@ -100,7 +109,8 @@ class AppSettingsActivity : AppCompatActivity() {
             val formattedHours = String.format("%02d", hoursUsage)
             val formattedMinutes = String.format("%02d", minutesUsage)
 
-            withContext(Dispatchers.Main) {
+            // update UI on the main thread
+            runOnUiThread {
                 todaysUsage.text = "$formattedHours : $formattedMinutes"
             }
 
@@ -109,13 +119,16 @@ class AppSettingsActivity : AppCompatActivity() {
             val hoursLimit = (appData.timeLimit / (1000 * 60 * 60))
             val minutesLimit = (appData.timeLimit / (1000 * 60)) - (hoursLimit * 60)
 
-            withContext(Dispatchers.Main) {
+            // update UI on the main thread
+            runOnUiThread {
                 hourSelector.value = hoursLimit.toInt()
                 minuteSelector.value = minutesLimit.toInt()
                 enableTimeLimit.isChecked = appData.hasLimit
             }
         }
     }
+
+
 
 
     /**

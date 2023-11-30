@@ -11,12 +11,13 @@ import kotlinx.coroutines.launch
 
 open class AppSettingsViewModel(
     private val appRepository: AppRepository,
-    private val usageRepository: UsageRepository?
+    private val usageRepository: UsageRepository
 ): ViewModel() {
     open fun getAppUsage(appName: String): Long {
+        println("original has runned")
         val (day, month, year) = getCurrentDate()
-        val usageData = usageRepository?.getUsageData(day, month, year)
-        return usageData?.find {
+        val usageData = usageRepository.getUsageData(day, month, year)
+        return usageData.find {
             it.appName == appName
         }?.usage ?: 0
     }
