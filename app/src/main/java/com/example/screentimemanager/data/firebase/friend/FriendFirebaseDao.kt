@@ -13,8 +13,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 
-class FriendFirebaseDao(
-    private val database: DatabaseReference
+open class FriendFirebaseDao(
+    private val database: DatabaseReference,
+    val userEmail: String = FirebaseAuth.getInstance().currentUser?.email!!
 ) {
     // firebase variables
     val IS_REQUEST = "request"
@@ -22,8 +23,6 @@ class FriendFirebaseDao(
     val RECEIVER_EMAIL = "receiverEmail"
 
     private val friendsRef: DatabaseReference = database.child("friends")
-    //val userEmail = FirebaseAuth.getInstance().currentUser?.email!!
-    val userEmail = "test"
 
     private val _friendList = MutableLiveData<List<String>>()
     val friendList: LiveData<List<String>> = _friendList
@@ -114,8 +113,14 @@ class FriendFirebaseDao(
      * declines friend request/removes friend with the given email
      */
     suspend fun deleteFriend(friendEmail: String) {
-        // delete both possible variations
-        friendsRef.child(userEmail).child(friendEmail).removeValue()
-        friendsRef.child(friendEmail).child(userEmail).removeValue()
+        // create a map for the updates
+        val updates = HashMap<String, Any?>()
+
+        // add paths to the map
+        updates["/${userEmail}/${friendEmail}"] = null
+        updates["/${friendEmail}/${userEmail}"] = null
+
+        // update the database
+        friendsRef.updateChildren(updates)
     }
 }
