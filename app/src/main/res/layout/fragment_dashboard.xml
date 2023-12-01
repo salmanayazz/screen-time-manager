@@ -16,13 +16,10 @@
             android:text="Daily Usage"
             android:textSize="34sp" />
 
-        <com.db.williamchart.view.BarChartView
+        <lecho.lib.hellocharts.view.ColumnChartView
+            android:id="@+id/chart"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:chart_axis="x"
-            app:chart_barColor="#64B5F6"
-            app:chart_barRadius="4dp"
-            />
+            android:layout_height="689dp" />
 
     </LinearLayout>
 </ScrollView>

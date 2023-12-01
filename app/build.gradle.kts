@@ -38,6 +38,7 @@ android {
     buildFeatures {
         viewBinding = true
     }
+
 }
 
 dependencies {
@@ -56,9 +57,6 @@ dependencies {
     implementation("com.google.android.gms:play-services-maps:18.2.0")
     implementation ("com.google.code.gson:gson:2.8.2")
     implementation("com.github.lecho:hellocharts-library:1.5.8")
-
-    //bar graph
-    implementation("com.diogobernardino:williamchart:3.10.1")
 
     // local room db
     val room_version = "2.6.0"
