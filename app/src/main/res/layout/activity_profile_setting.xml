@@ -16,6 +16,7 @@
             android:src="@drawable/login_background_header"/>
     </FrameLayout>
     <LinearLayout
+        android:id="@+id/user_profile_info_banner"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
@@ -30,6 +31,19 @@
             android:layout_gravity="center"
             android:scaleType="fitCenter"
             android:src="@drawable/generic_user_profile"/>
+        <androidx.appcompat.widget.AppCompatTextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAlignment="center"
+            android:textSize="30dp"
+            android:textStyle="bold"
+            android:text="John Smith"/>
+        <androidx.appcompat.widget.AppCompatTextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAlignment="center"
+            android:textSize="15dp"
+            android:text="Johnsmith@gmail.com"/>
     </LinearLayout>
     <LinearLayout
         android:layout_marginTop="30dp"
@@ -41,8 +55,8 @@
 
     </LinearLayout>
     <LinearLayout
-        android:layout_marginTop="30dp"
-        android:layout_below="@id/login_form_container"
+        android:layout_below="@id/user_profile_info_banner"
+        android:layout_marginTop="10dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
