@@ -15,6 +15,7 @@ import com.example.screentimemanager.R
 import com.example.screentimemanager.data.firebase.user.UserFirebase
 import com.example.screentimemanager.data.firebase.user.UserFirebaseDao
 import com.example.screentimemanager.databinding.FragmentDashboardBinding
+import com.example.screentimemanager.ui.profileSetting.ProfileSetting
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
@@ -30,8 +31,6 @@ class DashboardFragment : Fragment() {
     // onDestroyView.
     private val binding get() = _binding!!
     private lateinit var logInBtn: Button
-    private lateinit var emailEditText: EditText
-    private lateinit var passwordEditText: EditText
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -43,12 +42,21 @@ class DashboardFragment : Fragment() {
 
         _binding = FragmentDashboardBinding.inflate(inflater, container, false)
         val root: View = binding.root
-
+        logInBtn = root.findViewById(R.id.testbtn)
+        logInBtn.setOnClickListener{
+            onTestBtnClicker();
+        }
         return root
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    //TODO : Remove this function later
+    private fun onTestBtnClicker(){
+        val intent:Intent= Intent(requireContext(),ProfileSetting::class.java)
+        startActivity(intent)
     }
 }
