@@ -57,7 +57,7 @@ class UsageFirebaseDao(private val database: DatabaseReference) {
         val sanitizedEmail = email.replace("@", "(").replace(".", ")")
         val userUsageRef = usageRef.child(sanitizedEmail)
             .child("$year/$month/$day")
-            .child(appName)
+            .child(appName.replace(".","_"))
 
         try {
             userUsageRef.setValue(UsageFirebase(sanitizedEmail, appName, day, month, year, usage))
