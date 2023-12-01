@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.flowOn
 
 open class FriendFirebaseDao(
     private val database: DatabaseReference,
-    val userEmail: String = FirebaseAuth.getInstance().currentUser?.email!!
+    val userEmail: String = FirebaseAuth.getInstance().currentUser?.email?: "Not Logged In"
 ) {
     // firebase variables
     val IS_REQUEST = "request"
