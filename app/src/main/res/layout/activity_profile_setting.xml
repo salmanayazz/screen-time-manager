@@ -26,11 +26,13 @@
             android:textAlignment="center"
             android:textSize="30dp"
             android:textStyle="bold"
+            android:id="@+id/profile_activity_name"
             android:text="John Smith"/>
         <androidx.appcompat.widget.AppCompatTextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textAlignment="center"
+            android:id="@+id/profile_activity_email"
             android:textSize="15dp"
             android:text="Johnsmith@gmail.com"/>
     </LinearLayout>
@@ -43,6 +45,7 @@
         android:layout_below="@id/login_banner_layout">
         <com.google.android.material.imageview.ShapeableImageView
             app:shapeAppearanceOverlay="@style/roundedImage"
+            android:id="@+id/profile_activity_image"
             android:layout_width="150dp"
             android:layout_height="150dp"
             android:padding="5dp"
