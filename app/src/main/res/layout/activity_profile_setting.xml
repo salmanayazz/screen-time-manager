@@ -93,6 +93,8 @@
             android:text="Reset password"/>
 
         <androidx.appcompat.widget.AppCompatTextView
+            android:clickable="true"
+            android:id="@+id/delete_btn_profile"
             android:layout_marginVertical="15dp"
             android:layout_marginLeft="20dp"
             android:layout_width="match_parent"

@@ -34,4 +34,12 @@ class UserFirebaseDao(
         }
     }
 
+    suspend fun deleteUser(email: String){
+        // TODO
+    }
+
+    suspend fun updateUser(email: String, fName: String,lName: String){
+        //TODO
+    }
+
 }
