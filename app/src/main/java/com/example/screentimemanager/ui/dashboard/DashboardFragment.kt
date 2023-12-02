@@ -10,7 +10,6 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.example.screentimemanager.R
 import com.example.screentimemanager.databinding.FragmentDashboardBinding
-import lecho.lib.hellocharts.formatter.AxisValueFormatter
 import lecho.lib.hellocharts.model.Axis
 import lecho.lib.hellocharts.model.AxisValue
 import lecho.lib.hellocharts.model.Column
@@ -49,7 +48,7 @@ class DashboardFragment : Fragment() {
         val axisX = Axis().setHasLines(false)
         val axisY = Axis().setHasLines(false)
         val axisValues = mutableListOf<AxisValue>()
-        val dayLabels = arrayOf("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat")
+        val dayLabels = arrayOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
         for (i in 0 until 7) {
             axisValues.add(AxisValue(i.toFloat()).setLabel(dayLabels[i]))
         }
@@ -79,8 +78,7 @@ class DashboardFragment : Fragment() {
             columns.add(column.setHasLabels(true))
         }
 
-        val columnChartData = ColumnChartData(columns)
-        return columnChartData
+        return ColumnChartData(columns)
     }
 
 
