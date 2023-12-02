@@ -8,6 +8,13 @@
     android:orientation="vertical"
     android:padding="8dp">
 
+    <TextView
+        android:id="@+id/friend_info"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+        android:layout_margin="8dp" />
+
     <com.github.mikephil.charting.charts.BarChart
         android:id="@+id/chart"
         android:layout_width="match_parent"
