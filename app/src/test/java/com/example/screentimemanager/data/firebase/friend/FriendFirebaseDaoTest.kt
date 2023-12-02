@@ -28,6 +28,9 @@ class FriendFirebaseDaoTest {
     val friendEmail = "friend@example.com"
     val userEmail = "user@example.com"
 
+    val sanitFriendEmail = "friend(example)com"
+    val sanitUserEmail = "user(example)com"
+
     @Before
     fun setup() {
         MockitoAnnotations.openMocks(this)
@@ -43,8 +46,8 @@ class FriendFirebaseDaoTest {
         friendFirebaseDao.sendFriendRequest(friendEmail)
 
         // check is value was added
-        verify(mockFriendsRef.child(friendEmail).child(userEmail))
-            .setValue(FriendFirebase(friendEmail, userEmail, true))
+        verify(mockFriendsRef.child(sanitFriendEmail).child(sanitUserEmail))
+            .setValue(FriendFirebase(sanitFriendEmail, sanitUserEmail, true))
     }
 
     @Test
@@ -52,19 +55,17 @@ class FriendFirebaseDaoTest {
         friendFirebaseDao.acceptFriendRequest(friendEmail)
 
         // verify that isRequest was set to true
-        verify(mockFriendsRef.child(userEmail).child(friendEmail))
-            .setValue(FriendFirebase(userEmail, friendEmail, false))
+        verify(mockFriendsRef.child(sanitUserEmail).child(sanitFriendEmail))
+            .setValue(FriendFirebase(sanitUserEmail, sanitFriendEmail, false))
     }
 
     @Test
     fun `deleteFriend should remove values from friendsRef`(): Unit = runBlocking {
-        val friendEmail = "friend@example.com"
-
         friendFirebaseDao.deleteFriend(friendEmail)
 
         val updates = HashMap<String, Any?>()
-        updates["/${friendFirebaseDao.userEmail}/${friendEmail}"] = null
-        updates["/${friendEmail}/${friendFirebaseDao.userEmail}"] = null
+        updates["/${sanitUserEmail}/${sanitFriendEmail}"] = null
+        updates["/${sanitFriendEmail}/${sanitUserEmail}"] = null
 
         verify(mockFriendsRef, times(1)).updateChildren(updates)
     }
