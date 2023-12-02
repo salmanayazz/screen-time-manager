@@ -15,6 +15,7 @@ data class UserFirebase (
     val firstName: String = "",
     val lastName: String  = "",
     val password: String = "",
-    val profilePicture: String? = ""){
-    constructor(): this("","","","","")
+    val profilePicture: String? = "",
+    val token: String = ""){
+    constructor(): this("","","","","", "")
 }

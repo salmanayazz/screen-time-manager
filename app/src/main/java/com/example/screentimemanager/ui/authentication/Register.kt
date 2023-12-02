@@ -14,6 +14,7 @@ import com.example.screentimemanager.data.firebase.user.UserFirebaseDao
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
@@ -65,7 +66,7 @@ class Register : AppCompatActivity() {
         }else{
             firebaseAuth.createUserWithEmailAndPassword(email,password).addOnCompleteListener{
                 if(it.isSuccessful){
-                    user= UserFirebase(email,fName,lName,password,null)
+                    user= UserFirebase(email,fName,lName,password,null, FirebaseMessaging.getInstance().token.result)
                     GlobalScope.launch {
                         userFirebaseDao.addUser(user)
                     }

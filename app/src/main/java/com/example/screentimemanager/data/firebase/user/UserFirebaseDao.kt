@@ -1,7 +1,10 @@
 package com.example.screentimemanager.data.firebase.user
 
 import com.google.firebase.database.DatabaseReference
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 
@@ -34,12 +37,20 @@ class UserFirebaseDao(
         }
     }
 
+
     suspend fun deleteUser(email: String){
         // TODO
     }
 
     suspend fun updateUser(email: String, fName: String,lName: String){
         //TODO
+    }
+
+    suspend fun updateToken(userEmail: String, token: String){
+        CoroutineScope(IO).launch{
+            val userNode = database.child("users").child(userEmail.replace("@", "(").replace(".", ")"))
+            userNode.child("token").setValue(token)
+        }
     }
 
 }
