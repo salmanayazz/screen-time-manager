@@ -214,6 +214,7 @@ class FriendFragment : Fragment() {
             xAxis.valueFormatter = IndexAxisValueFormatter(labels)
             xAxis.labelRotationAngle = -90f
             xAxis.setDrawGridLines(false)
+            xAxis.labelCount = labels.size
 
             val yAxisLeft = chart.axisLeft
             yAxisLeft.setDrawGridLines(false)
