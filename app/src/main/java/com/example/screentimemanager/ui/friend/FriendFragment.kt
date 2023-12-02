@@ -10,12 +10,9 @@ import android.widget.ListView
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
 import com.example.screentimemanager.R
 import com.example.screentimemanager.data.firebase.friend.FriendFirebaseDao
-import com.example.screentimemanager.data.firebase.usage.UsageFirebase
 import com.example.screentimemanager.data.firebase.usage.UsageFirebaseDao
-import com.example.screentimemanager.data.firebase.user.UserFirebase
 import com.example.screentimemanager.data.firebase.user.UserFirebaseDao
 import com.example.screentimemanager.data.local.usage.UsageDao
 import com.example.screentimemanager.data.local.usage.UsageDatabase
@@ -38,11 +35,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import lecho.lib.hellocharts.model.Axis
-import lecho.lib.hellocharts.model.Column
-import lecho.lib.hellocharts.model.ColumnChartData
-import lecho.lib.hellocharts.model.SubcolumnValue
-import lecho.lib.hellocharts.view.ColumnChartView
 import java.util.Calendar
 
 class FriendFragment : Fragment() {
@@ -84,6 +76,19 @@ class FriendFragment : Fragment() {
 
         friends = ArrayList()
         val adapter = FriendListAdapter(requireActivity(), R.layout.layout_friend_list, friends)
+        adapter.setOnItemClickListener { friend ->
+            val bundle = Bundle()
+            bundle.putString(FriendInfoDialog.FRIEND_EMAIL_KEY, friend.email)
+            bundle.putInt(FriendInfoDialog.DAY_KEY, day)
+            bundle.putInt(FriendInfoDialog.MONTH_KEY, month+1)
+            bundle.putInt(FriendInfoDialog.YEAR_KEY, year)
+
+            // create and show the DialogFragment
+            val dialogFragment = FriendInfoDialog()
+            dialogFragment.arguments = bundle
+            dialogFragment.show(childFragmentManager, "FriendInfoDialog")
+        }
+
         val ret = inflater.inflate(R.layout.fragment_friend, container, false)
         btnAddFriend = ret.findViewById(R.id.fab_addFriend)
         friendList = ret.findViewById(R.id.lv_friendList)
@@ -96,7 +101,7 @@ class FriendFragment : Fragment() {
         month = calendar.get(Calendar.MONTH)
         year = calendar.get(Calendar.YEAR)
 
-        displayDate.text = "$day-$month-$year"
+        displayDate.text = "$day-${month+1}-$year"
 
         usageDatabase = UsageDatabase.getInstance(requireActivity())
         usageDao = usageDatabase.usageDao
@@ -190,8 +195,6 @@ class FriendFragment : Fragment() {
                 val usages = usageFirebaseDao.getUsageData(friends[i], day, month + 1, year)
                 val user = userRepository.getUser(friends[i])
 
-                println("usages: $usages")
-                println("for: ${friends[i]}")
                 var totalUsage: Long = 0
                 for (usage in usages){
                     totalUsage += usage.usage

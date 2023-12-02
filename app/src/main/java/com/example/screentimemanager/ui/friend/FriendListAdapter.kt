@@ -22,11 +22,23 @@ import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class FriendListAdapter(private var context: Context, @LayoutRes private val layoutResource: Int, private var array: ArrayList<String>): ArrayAdapter<String>(context, layoutResource, array) {
+class FriendListAdapter(
+    private var context: Context,
+    @LayoutRes private val layoutResource: Int,
+    private var array: ArrayList<String>
+) : ArrayAdapter<String>(context, layoutResource, array) {
     private lateinit var imgProfile: ImageView
     private lateinit var tvName: TextView
 
-    override fun getItem(position: Int): String? {
+    // Listener to handle item clicks
+    private var onItemClickListener: ((UserFirebase) -> Unit)? = null
+
+    // setter for the item click listener
+    fun setOnItemClickListener(listener: (UserFirebase) -> Unit) {
+        onItemClickListener = listener
+    }
+
+    override fun getItem(position: Int): String {
         return array[position]
     }
 
@@ -53,10 +65,14 @@ class FriendListAdapter(private var context: Context, @LayoutRes private val lay
                 }
 
                 tvName.text = "${friend?.firstName} ${friend?.lastName}"
+
+                // set click listener on the whole item
+                ret.setOnClickListener {
+                    onItemClickListener?.invoke(friend ?: return@setOnClickListener)
+                }
             }
         }
 
         return ret
     }
-
 }

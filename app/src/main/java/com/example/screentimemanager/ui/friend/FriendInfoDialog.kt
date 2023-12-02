@@ -5,13 +5,11 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.DialogFragment
 import com.example.screentimemanager.R
 import com.example.screentimemanager.data.firebase.usage.UsageFirebaseDao
 import com.example.screentimemanager.data.local.usage.UsageDatabase
 import com.example.screentimemanager.data.repository.UsageRepository
-import com.example.screentimemanager.util.Util
 import com.github.mikephil.charting.charts.BarChart
 import com.github.mikephil.charting.data.BarData
 import com.github.mikephil.charting.data.BarDataSet
@@ -24,20 +22,19 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import lecho.lib.hellocharts.model.Axis
-import lecho.lib.hellocharts.model.AxisValue
-import lecho.lib.hellocharts.model.Column
-import lecho.lib.hellocharts.model.ColumnChartData
-import lecho.lib.hellocharts.model.SubcolumnValue
-import lecho.lib.hellocharts.view.ColumnChartView
-import java.util.concurrent.TimeUnit
 
 class FriendInfoDialog : DialogFragment() {
     companion object {
         val FRIEND_EMAIL_KEY = "friend-email-key"
+        val DAY_KEY = "day-key"
+        val MONTH_KEY = "month-key"
+        val YEAR_KEY = "year-key"
     }
 
     private lateinit var friendEmail: String
+    private var day = -1
+    private var month = -1
+    private var year = -1
     private lateinit var usageRepository: UsageRepository
     private lateinit var usageFirebaseDao: UsageFirebaseDao
     private lateinit var chart: BarChart
@@ -48,6 +45,10 @@ class FriendInfoDialog : DialogFragment() {
     ): View? {
         val root = inflater.inflate(R.layout.dialog_friend_info, container, false)
         friendEmail = arguments?.getString(FRIEND_EMAIL_KEY).toString()
+        day = arguments?.getInt(DAY_KEY) ?: -1
+        month = arguments?.getInt(MONTH_KEY) ?: -1
+        year = arguments?.getInt(YEAR_KEY) ?: -1
+
 
         chart = root.findViewById(R.id.chart)
 
@@ -79,8 +80,6 @@ class FriendInfoDialog : DialogFragment() {
 
     private suspend fun generateBarData(): BarData {
         return withContext(IO) {
-            val (day, month, year) = Util.getCurrentDate()
-
             // get usage data from the repository
             val usages = usageFirebaseDao.getUsageData(friendEmail, day, month, year)
 
