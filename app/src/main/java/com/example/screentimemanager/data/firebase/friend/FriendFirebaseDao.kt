@@ -22,6 +22,7 @@ open class FriendFirebaseDao(
     val IS_REQUEST = "request"
     val SENDER_EMAIL = "senderEmail"
     val RECEIVER_EMAIL = "receiverEmail"
+    val sanitUserEmail = userEmail.replace("@", "(").replace(".", ")")
 
     private val friendsRef: DatabaseReference = database.child("friends")
 
@@ -35,23 +36,10 @@ open class FriendFirebaseDao(
      * updates the friendList live data variable
      */
     fun getFriendList() {
-        friendsRef.addChildEventListener(object: ChildEventListener{
-            override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
-                //Will be triggered when added new friend request
+        //using addValueEventListener to get the entire contents
+        friendsRef.addValueEventListener(object: ValueEventListener{
+            override fun onDataChange(snapshot: DataSnapshot) {
                 updateFriendList(snapshot)
-            }
-
-            override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {
-                //Will be triggered when accepted friend request
-                updateFriendList(snapshot)
-            }
-
-            override fun onChildRemoved(snapshot: DataSnapshot) {
-                //Will be triggered when removed friend
-            }
-
-            override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {
-                //Do nothing
             }
 
             override fun onCancelled(error: DatabaseError) {
@@ -65,11 +53,11 @@ open class FriendFirebaseDao(
         val friends: ArrayList<String> = ArrayList()
         for (receiver in snapshot.children) {
             for (sender in receiver.children) {
-                if (receiver.key == userEmail || sender.key == userEmail) {
+                if (receiver.key == sanitUserEmail || sender.key == sanitUserEmail) {
                     // only return emails that have isRequest set to false
                     val isRequest = sender.child(IS_REQUEST).getValue(Boolean::class.java) ?: true
                     var friendEmail: String? = null
-                    if(receiver.key == userEmail){
+                    if(receiver.key == sanitUserEmail){
                         friendEmail = sender.key
                     }
                     else{
@@ -88,23 +76,10 @@ open class FriendFirebaseDao(
      * updates the friendRequestList live data variable
      */
     fun getFriendRequestList() {
-        friendsRef.addChildEventListener(object: ChildEventListener{
-            override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
-                // Will be triggered when added a friend request
+        //using addValueEventListener to get the entire contents
+        friendsRef.addValueEventListener(object: ValueEventListener{
+            override fun onDataChange(snapshot: DataSnapshot) {
                 updateFriendRequestList(snapshot)
-            }
-
-            override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {
-                //Will be triggered when accepted friend request
-                updateFriendRequestList(snapshot)
-            }
-
-            override fun onChildRemoved(snapshot: DataSnapshot) {
-                //Will be triggered when removed friend
-            }
-
-            override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {
-                //Do nothing
             }
 
             override fun onCancelled(error: DatabaseError) {
@@ -118,7 +93,7 @@ open class FriendFirebaseDao(
         val requestSenderList: ArrayList<String> = ArrayList()
         for (receiver in snapshot.children) {
             println("FOUND A PERSON")
-            if (receiver.key == userEmail) {
+            if (receiver.key == sanitUserEmail) {
                 println("FOUND PERSON")
                 for (sender in receiver.children) {
                     println("THERES A FRIEND")
