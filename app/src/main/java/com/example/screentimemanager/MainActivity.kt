@@ -138,10 +138,17 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // request notification permissions
     private fun askNotificationPermission() {
-        if (Build.VERSION.SDK_INT < 23) return
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), PERMISSION_REQUEST_CODE)
+
+        val notificationPermissionLauncher =
+            registerForActivityResult(
+                ActivityResultContracts.RequestPermission()
+            ) { }
+
+        notificationPermissionLauncher.launch(
+            Manifest.permission.POST_NOTIFICATIONS
+        )
     }
 
     /**
