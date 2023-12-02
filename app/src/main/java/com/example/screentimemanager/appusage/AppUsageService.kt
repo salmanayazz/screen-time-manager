@@ -236,7 +236,6 @@ class AppUsageService : Service() {
             val packetManager = applicationContext.packageManager
             val appInfo = packetManager.getApplicationInfo(appName, 0)
             val appLabel = packetManager.getApplicationLabel(appInfo).toString()
-            println("app name is: $appLabel")
             usageRepository.setUsageData(appName, appLabel, day, month, year, usageTime)
         }
     }
