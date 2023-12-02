@@ -46,14 +46,6 @@ class AddFriendsActivity : AppCompatActivity() {
         friendRepository = FriendRepository(friendFirebaseDao)
         friendRequests = ArrayList()
         requestFriendName = ArrayList()
-        /*
-        for(request in friendRequests){
-            requestFriendName.add(userRepository.getUser(request))
-        }*/
-        friendRepository.getFriendRequestList()
-        friendRepository.friendRequestList.observe(this){
-            friendRequests = it as ArrayList<String>
-        }
 
         etSearchFriend.isFocusableInTouchMode = true
         etSearchFriend.requestFocus()
@@ -87,8 +79,20 @@ class AddFriendsActivity : AppCompatActivity() {
             }
 
         })
-
+        friendRepository.getFriendRequestList()
         val adapter = FriendRequestListAdapter(this, requestFriendName)
+        friendRepository.friendRequestList.observe(this){
+            friendRequests = it as ArrayList<String>
+            requestFriendName = ArrayList()
+            for(friend in friendRequests){
+                CoroutineScope(IO).launch {
+                    requestFriendName.add(userRepository.getUser(friend))
+                }
+            }
+            adapter.clear()
+            adapter.addAll(requestFriendName)
+            adapter.notifyDataSetChanged()
+        }
         lvFriendRequest.adapter = adapter
 
     }
