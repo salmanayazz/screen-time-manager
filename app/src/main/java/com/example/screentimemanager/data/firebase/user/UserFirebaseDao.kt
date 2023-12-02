@@ -37,10 +37,20 @@ class UserFirebaseDao(
         }
     }
 
+
+    suspend fun deleteUser(email: String){
+        // TODO
+    }
+
+    suspend fun updateUser(email: String, fName: String,lName: String){
+        //TODO
+    }
+
     suspend fun updateToken(userEmail: String, token: String){
         CoroutineScope(IO).launch{
             val userNode = database.child("users").child(userEmail.replace("@", "(").replace(".", ")"))
             userNode.child("token").setValue(token)
         }
     }
+
 }
