@@ -38,7 +38,6 @@ class FriendInfoDialog: DialogFragment() {
         // Inflate the layout for this fragment
         val root = inflater.inflate(R.layout.dialog_friend_info, container, false)
         friendEmail = arguments?.getString(FRIEND_EMAIL_KEY).toString()
-        println("friendEmail $friendEmail")
 
         chart = root.findViewById(R.id.lcv_histogram)
 
@@ -66,8 +65,7 @@ class FriendInfoDialog: DialogFragment() {
 
             // fetch usage data from the repository
             val usages = usageFirebaseDao.getUsageData(friendEmail, day, month, year)
-            println("usages: ")
-            println(usages)
+            
             val columns = mutableListOf<Column>()
 
             for (usage in usages) {
