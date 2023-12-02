@@ -32,8 +32,9 @@ class UsageFirebaseDao(private val database: DatabaseReference) {
                 for (appSnapshot in userSnapshot.children) {
                     val appName = appSnapshot.key
                     val usage = appSnapshot.child("usage").getValue(Long::class.java)
-                    if (appName != null && usage != null) {
-                        val usageData = UsageFirebase(email, appName, day, month, year, usage)
+                    val appNameLabel = appSnapshot.child("appNameLabel").getValue(String::class.java)
+                    if (appName != null && usage != null && appNameLabel != null) {
+                        val usageData = UsageFirebase(email, appName, appNameLabel,day, month, year, usage)
                         usageList.add(usageData)
                     }
                 }
@@ -46,12 +47,13 @@ class UsageFirebaseDao(private val database: DatabaseReference) {
     /**
      * Set the usage data for the given user on the specified date.
      * @param appName The app to add to the user's list of apps
+     * @param appNameLabel The app's label name (ex. Chrome)
      * @param day The day of the month
      * @param month The month of the year
      * @param year The year
      * @param usage The usage time in milliseconds
      */
-    suspend fun setUsageData(appName: String, day: Int, month: Int, year: Int, usage: Long) {
+    suspend fun setUsageData(appName: String, appNameLabel: String, day: Int, month: Int, year: Int, usage: Long) {
         val currentUser = FirebaseAuth.getInstance().currentUser
         val email = currentUser?.email ?: DEFAULT_EMAIL
         val sanitizedEmail = email.replace("@", "(").replace(".", ")")
@@ -60,7 +62,7 @@ class UsageFirebaseDao(private val database: DatabaseReference) {
             .child(appName.replace(".","_"))
 
         try {
-            userUsageRef.setValue(UsageFirebase(sanitizedEmail, appName, day, month, year, usage))
+            userUsageRef.setValue(UsageFirebase(sanitizedEmail, appName, appNameLabel, day, month, year, usage))
                 .await()
             Log.d(TAG, "Setting usage data for $sanitizedEmail on $day/$month/$year")
         } catch (e: Exception) {

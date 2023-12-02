@@ -1,5 +1,6 @@
 package com.example.screentimemanager.data.repository
 
+import android.content.pm.PackageManager
 import androidx.lifecycle.LiveData
 import com.example.screentimemanager.data.firebase.usage.UsageFirebase
 import com.example.screentimemanager.data.firebase.usage.UsageFirebaseDao
@@ -50,6 +51,8 @@ open class UsageRepository(
      * if usage data already exists, it will be replaced
      * @param appName
      * the app to add to the user's list of apps
+     * @param appNameLabel
+     * the readable application name ex "Chrome"
      * @param day
      * the day of the month
      * @param month
@@ -59,11 +62,10 @@ open class UsageRepository(
      * @param usage
      * the usage time in milliseconds
      */
-    suspend fun setUsageData(appName: String, day: Int, month: Int, year: Int, usage: Long) {
+    suspend fun setUsageData(appName: String, appNameLabel: String, day: Int, month: Int, year: Int, usage: Long) {
         // Update local database
         usageDao.setUsageData(appName, day, month, year, usage)
-
         // Update Firebase data
-        usageFirebaseDao.setUsageData(appName, day, month, year, usage)
+        usageFirebaseDao.setUsageData(appName, appNameLabel, day, month, year, usage)
     }
 }

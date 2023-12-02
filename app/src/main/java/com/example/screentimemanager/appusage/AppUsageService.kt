@@ -191,8 +191,9 @@ class AppUsageService : Service() {
 
         // if no usage data for current day, create it
         if (appUsage == null) {
+            val appNameLabel = applicationContext.packageManager.getApplicationLabel(applicationInfo).toString()
             CoroutineScope(IO).launch {
-                usageRepository.setUsageData(currentApp, day, month, year, 0)
+                usageRepository.setUsageData(currentApp, appNameLabel, day, month, year, 0)
             }
         }
 
@@ -230,7 +231,8 @@ class AppUsageService : Service() {
                 appRepository.addApp(appName)
             }
             // save usage value
-            usageRepository.setUsageData(appName, day, month, year, usageTime)
+            val appNameLabel = applicationContext.packageManager.getApplicationLabel(applicationInfo).toString()
+            usageRepository.setUsageData(appName, appNameLabel, day, month, year, usageTime)
         }
     }
 
