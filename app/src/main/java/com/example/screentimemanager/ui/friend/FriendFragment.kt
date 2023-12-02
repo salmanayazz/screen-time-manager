@@ -1,6 +1,7 @@
 package com.example.screentimemanager.ui.friend
 
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -15,18 +16,28 @@ import com.example.screentimemanager.data.firebase.friend.FriendFirebaseDao
 import com.example.screentimemanager.data.firebase.usage.UsageFirebase
 import com.example.screentimemanager.data.firebase.usage.UsageFirebaseDao
 import com.example.screentimemanager.data.firebase.user.UserFirebase
+import com.example.screentimemanager.data.firebase.user.UserFirebaseDao
 import com.example.screentimemanager.data.local.usage.UsageDao
 import com.example.screentimemanager.data.local.usage.UsageDatabase
 import com.example.screentimemanager.data.repository.FriendRepository
 import com.example.screentimemanager.data.repository.UsageRepository
+import com.example.screentimemanager.data.repository.UserRepository
 import com.example.screentimemanager.ui.authentication.Login
+import com.github.mikephil.charting.charts.BarChart
+import com.github.mikephil.charting.data.BarData
+import com.github.mikephil.charting.data.BarDataSet
+import com.github.mikephil.charting.data.BarEntry
+import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
+import com.github.mikephil.charting.utils.ColorTemplate
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import lecho.lib.hellocharts.model.Axis
 import lecho.lib.hellocharts.model.Column
 import lecho.lib.hellocharts.model.ColumnChartData
@@ -42,7 +53,7 @@ class FriendFragment : Fragment() {
     private lateinit var rightArrow: TextView
     private lateinit var displayDate: TextView
 
-    private lateinit var chart: ColumnChartView
+    private lateinit var chart: BarChart
 
     private lateinit var usageDatabase: UsageDatabase
     private lateinit var usageDao: UsageDao
@@ -50,6 +61,7 @@ class FriendFragment : Fragment() {
     private lateinit var firebaseDatabaseRef: DatabaseReference
     private lateinit var friendDao: FriendFirebaseDao
     private lateinit var usageFirebaseDao: UsageFirebaseDao
+    private lateinit var userRepository: UserRepository
 
     private lateinit var friendRepo: FriendRepository
     private lateinit var usageRepo: UsageRepository
@@ -94,9 +106,13 @@ class FriendFragment : Fragment() {
         usageRepo = UsageRepository(usageFirebaseDao, usageDao)
         friendRepo = FriendRepository(friendDao)
 
+        val firebaseDatabase = FirebaseDatabase.getInstance()
+        val userFirebaseDao = UserFirebaseDao(firebaseDatabase.reference)
+        userRepository = UserRepository(userFirebaseDao)
+
         friendRepo.getFriendList()
 
-        chart.columnChartData = generateColumnData()
+        loadChart()
 
         //friendList is to show the list view to list out friends
         friendList.adapter = adapter
@@ -106,6 +122,7 @@ class FriendFragment : Fragment() {
             adapter.clear()
             adapter.addAll(friends)
             adapter.notifyDataSetChanged()
+            loadChart()
         }
 
         //When clicking the left arrow, the date will change to the day before
@@ -114,8 +131,8 @@ class FriendFragment : Fragment() {
             day = calendar.get(Calendar.DAY_OF_MONTH)
             month = calendar.get(Calendar.MONTH)
             year = calendar.get(Calendar.YEAR)
-            displayDate.text = "$day-$month-$year"
-            chart.columnChartData = generateColumnData()
+            displayDate.text = "$day-${month+1}-$year"
+            loadChart()
         }
 
         //When clicking the right arrow, the date will change to the day after
@@ -124,8 +141,8 @@ class FriendFragment : Fragment() {
             day = calendar.get(Calendar.DAY_OF_MONTH)
             month = calendar.get(Calendar.MONTH)
             year = calendar.get(Calendar.YEAR)
-            displayDate.text = "$day-$month-$year"
-            chart.columnChartData = generateColumnData()
+            displayDate.text = "$day-${month+1}-$year"
+            loadChart()
         }
 
         //When clicked add friend button, the user will be brought to the AddFriendsActivity
@@ -152,30 +169,64 @@ class FriendFragment : Fragment() {
         return ret
     }
 
-    //Generate histogram data for the graph
-    private  fun generateColumnData(): ColumnChartData{
-        val numColumns = friends.size
-        val columns = mutableListOf<Column>()
-        val values = mutableListOf<SubcolumnValue>()
+    private fun loadChart() {
         CoroutineScope(IO).launch {
+            val chartData = generateBarData()
+            withContext(Dispatchers.Main) {
+                chart.data = chartData
+                chart.invalidate() // refresh the chart
+            }
+        }
+    }
+
+    //Generate histogram data for the graph
+    private suspend fun generateBarData(): BarData {
+        return withContext(IO) {
+            val numColumns = friends.size
+            val entries = mutableListOf<BarEntry>()
+            val labels = mutableListOf<String>()
+
             for(i in 0 until numColumns){
-                values.clear()
-                val usages = usageFirebaseDao.getUsageData(friends[i], day, month, year) as List<UsageFirebase>
+                val usages = usageFirebaseDao.getUsageData(friends[i], day, month + 1, year)
+                val user = userRepository.getUser(friends[i])
+
+                println("usages: $usages")
+                println("for: ${friends[i]}")
                 var totalUsage: Long = 0
                 for (usage in usages){
                     totalUsage += usage.usage
                 }
-                values.add(SubcolumnValue(totalUsage.toFloat()))
-                columns.add(Column(values).setHasLabels(true).setHasLabelsOnlyForSelected(true))
+                // convert usage from millisecs to mins
+                val mins = totalUsage.toFloat() / (1000 * 60)
+                entries.add(BarEntry(i.toFloat(), mins, friends[i]))
+                labels.add("${user?.firstName} ${user?.lastName}")
             }
 
-        }
-        val columnChartData = ColumnChartData(columns)
-        val axisX = Axis().setAutoGenerated(true)
-        val axisY = Axis().setHasLines(true)
-        columnChartData.axisXBottom = axisX
-        columnChartData.axisYLeft = axisY
+            val dataSet = BarDataSet(entries, "User Usage")
+            dataSet.setColors(*ColorTemplate.MATERIAL_COLORS)
 
-        return columnChartData
+            val barData = BarData(dataSet)
+
+            val xAxis = chart.xAxis
+            xAxis.valueFormatter = IndexAxisValueFormatter(labels)
+            xAxis.labelRotationAngle = -90f
+            xAxis.setDrawGridLines(false)
+
+            val yAxisLeft = chart.axisLeft
+            yAxisLeft.setDrawGridLines(false)
+
+            val yAxisRight = chart.axisRight
+            yAxisRight.setDrawGridLines(false)
+
+            dataSet.valueTextSize = 15f
+            dataSet.valueTextColor = Color.WHITE
+            dataSet.setDrawValues(true)
+
+            chart.legend.isEnabled = false
+            chart.description.isEnabled = false
+
+            return@withContext barData
+        }
     }
+
 }
