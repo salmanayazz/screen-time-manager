@@ -10,7 +10,9 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.example.screentimemanager.R
 import com.example.screentimemanager.databinding.FragmentDashboardBinding
+import lecho.lib.hellocharts.formatter.AxisValueFormatter
 import lecho.lib.hellocharts.model.Axis
+import lecho.lib.hellocharts.model.AxisValue
 import lecho.lib.hellocharts.model.Column
 import lecho.lib.hellocharts.model.ColumnChartData
 import lecho.lib.hellocharts.model.SubcolumnValue
@@ -40,13 +42,20 @@ class DashboardFragment : Fragment() {
         _binding = FragmentDashboardBinding.inflate(inflater, container, false)
         val root: View = binding.root
         val columnChartView: ColumnChartView = root.findViewById(R.id.chart)
-        val columnData = generateColumnData()
         val columnChartData = generateColumnData()
         columnChartView.columnChartData = columnChartData
 
         // Optional: Customize chart properties
-        val axisX = Axis()
-        val axisY = Axis().setHasLines(true)
+        val axisX = Axis().setHasLines(false)
+        val axisY = Axis().setHasLines(false)
+        val axisValues = mutableListOf<AxisValue>()
+        val dayLabels = arrayOf("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat")
+        for (i in 0 until 7) {
+            axisValues.add(AxisValue(i.toFloat()).setLabel(dayLabels[i]))
+        }
+        axisX.values = axisValues.toTypedArray().toMutableList()
+        columnChartData.axisYLeft = axisY
+
         columnChartData.axisXBottom = axisX
         columnChartData.axisYLeft = axisY
 
