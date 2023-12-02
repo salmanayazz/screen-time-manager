@@ -51,7 +51,7 @@ open class UsageRepository(
      * if usage data already exists, it will be replaced
      * @param appName
      * the app to add to the user's list of apps
-     * @param appNameLabel
+     * @param appLabel
      * the readable application name ex "Chrome"
      * @param day
      * the day of the month
@@ -62,10 +62,10 @@ open class UsageRepository(
      * @param usage
      * the usage time in milliseconds
      */
-    suspend fun setUsageData(appName: String, appNameLabel: String, day: Int, month: Int, year: Int, usage: Long) {
+    suspend fun setUsageData(appName: String, appLabel: String, day: Int, month: Int, year: Int, usage: Long) {
         // Update local database
         usageDao.setUsageData(appName, day, month, year, usage)
         // Update Firebase data
-        usageFirebaseDao.setUsageData(appName, appNameLabel, day, month, year, usage)
+        usageFirebaseDao.setUsageData(appName, appLabel, day, month, year, usage)
     }
 }

@@ -31,6 +31,7 @@ import android.util.Log
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
 import com.example.screentimemanager.data.repository.UserRepository
+import com.example.screentimemanager.ui.friend.FriendInfoDialog
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
@@ -97,6 +98,8 @@ class MainActivity : AppCompatActivity() {
         // start the AppUsageService
         val serviceIntent = Intent(this, AppUsageService::class.java)
         this.startForegroundService(serviceIntent)
+
+        testFriendInfo()
     }
 
 
@@ -136,5 +139,15 @@ class MainActivity : AppCompatActivity() {
         if (Build.VERSION.SDK_INT < 23) return
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), PERMISSION_REQUEST_CODE)
+    }
+
+    private fun testFriendInfo() {
+        val bundle = Bundle()
+        bundle.putString(FriendInfoDialog.FRIEND_EMAIL_KEY, "abcefg@gmail.com")
+
+        // create and show the DialogFragment
+        val dialogFragment = FriendInfoDialog()
+        dialogFragment.arguments = bundle
+        dialogFragment.show(supportFragmentManager, "FriendInfoDialog")
     }
 }
