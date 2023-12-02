@@ -42,9 +42,7 @@ open class UsageRepository(
      * return list of the user's usage data
      */
     suspend fun getUsageData(email: String, day: Int, month: Int, year: Int): List<UsageFirebase> {
-        val userUsageRef = usageFirebaseDao.usageRef.child(email).child("$day/$month/$year")
-        val snapshot = userUsageRef.get().await()
-        return snapshot.children.mapNotNull { it.getValue(UsageFirebase::class.java) }
+        return usageFirebaseDao.getUsageData(email, day, month, year)
     }
 
     /**
