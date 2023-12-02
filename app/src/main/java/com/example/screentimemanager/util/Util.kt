@@ -49,4 +49,18 @@ object Util {
 
         return Triple(day, month, year)
     }
+
+    /**
+     * converts milliseconds to hours and minutes
+     * @param millisecs
+     * the time in milliseconds
+     * @return
+     * a pair containing the hours and minutes
+     */
+    fun millisecToHoursAndMins(millisecs: Long): Pair<Int, Int> {
+        val hours = (millisecs / (1000 * 60 * 60))
+        val minutes = (millisecs / (1000 * 60)) - (hours * 60)
+
+        return Pair(hours.toInt(), minutes.toInt())
+    }
 }

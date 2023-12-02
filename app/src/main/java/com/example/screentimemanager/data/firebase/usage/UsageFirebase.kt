@@ -9,6 +9,8 @@ package com.example.screentimemanager.data.firebase.usage
  * @param appName
  * the name of the app 
  * (FK to App table)
+ * @param appLabel
+ * the app's label name (ex. Chrome)
  * @param day
  * the day of the month
  * @param month
@@ -21,6 +23,7 @@ package com.example.screentimemanager.data.firebase.usage
 data class UsageFirebase (
     val userEmail: String,
     val appName: String,
+    val appLabel: String,
     val day: Int,
     val month: Int,
     val year: Int,

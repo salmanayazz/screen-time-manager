@@ -13,7 +13,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:text="@string/usage"
-        android:textAppearance="@style/TextAppearance.AppCompat.Small"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"
         android:textColor="@color/black"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -24,6 +24,7 @@
         android:layout_height="wrap_content"
         android:layout_marginEnd="8dp"
         android:text="@string/left_arrow"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"
         app:layout_constraintEnd_toStartOf="@+id/tv_date"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -33,6 +34,7 @@
         android:layout_height="wrap_content"
         android:layout_marginEnd="8dp"
         android:text="@string/Date"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"
         app:layout_constraintEnd_toStartOf="@+id/tv_rightArrow"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -42,18 +44,19 @@
         android:layout_height="wrap_content"
         android:layout_marginEnd="16dp"
         android:text="@string/right_arrow"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <lecho.lib.hellocharts.view.ColumnChartView
+    <com.github.mikephil.charting.charts.BarChart
         android:id="@+id/lcv_histogram"
         android:layout_width="match_parent"
-        android:layout_height="240dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginEnd="8dp"
+        android:layout_height="300dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tv_textUsage" />
+        app:layout_constraintTop_toBottomOf="@+id/tv_textUsage"/>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab_addFriend"
