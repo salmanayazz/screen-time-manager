@@ -65,7 +65,6 @@ class AppUsageService : Service() {
         if (!isServiceRunning) {
             isServiceRunning = true
 
-            requestPermissions()
             setupRepo()
             startAppTracking()
 
@@ -99,24 +98,7 @@ class AppUsageService : Service() {
         usageRepository = UsageRepository(usageFirebaseDao, usageDao)
     }
 
-    /**
-     * requests the permissions needed for the service to work
-     * includes the usage access permission and the overlay permission
-     */
-    private fun requestPermissions() {
-        if (!isUsageAccessPermissionGranted()) {
-            var intent = Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            startActivity(intent)
-        }
 
-
-        if (!Settings.canDrawOverlays(this)) {
-            val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION)
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            startActivity(intent)
-        }
-    }
 
     /**
      * tracker that checks if the time limit for the current app is reached continuously

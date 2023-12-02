@@ -27,6 +27,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import android.Manifest
+import android.app.AlertDialog
+import android.app.AppOpsManager
+import android.content.Context
+import android.provider.Settings
 import android.util.Log
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
@@ -93,6 +97,7 @@ class MainActivity : AppCompatActivity() {
 
         // update the user information on swipe menu
         updateUserSwipeMenu()
+        requestUsageServicePermissions()
 
 
         // start the AppUsageService
@@ -138,4 +143,50 @@ class MainActivity : AppCompatActivity() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), PERMISSION_REQUEST_CODE)
     }
+
+    /**
+     * requests the permissions needed for the service to work
+     * includes the usage access permission and the overlay permission
+     */
+    private fun requestUsageServicePermissions() {
+        // check if overlay permission is granted
+        if (!Settings.canDrawOverlays(this)) {
+            val overlayIntent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION)
+            overlayIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+
+            AlertDialog.Builder(this)
+                .setTitle("Overlay Permission Required")
+                .setMessage("This app requires the Overlay permission. Please locate the app in the next screen and grant it.")
+                .setPositiveButton("OK") { _, _ ->
+                    startActivity(overlayIntent)
+                }
+                .setNegativeButton("Cancel", null)
+                .show()
+        }
+
+        // check if usage access permission is granted
+        val appOps = getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
+        val mode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            appOps.unsafeCheckOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS, android.os.Process.myUid(), packageName)
+        } else {
+            @Suppress("DEPRECATION")
+            appOps.checkOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS, android.os.Process.myUid(), packageName)
+        }
+        if (mode != AppOpsManager.MODE_ALLOWED) {
+            val usageAccessIntent = Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)
+            usageAccessIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+
+            AlertDialog.Builder(this)
+                .setTitle("Usage Access Permission Required")
+                .setMessage("This app requires the Usage Access permission. Please locate the app in the next screen and grant it.")
+                .setPositiveButton("OK") { _, _ ->
+                    startActivity(usageAccessIntent)
+                }
+                .setNegativeButton("Cancel", null)
+                .show()
+        }
+
+
+    }
+
 }
