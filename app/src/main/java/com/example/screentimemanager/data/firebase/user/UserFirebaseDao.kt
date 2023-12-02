@@ -26,7 +26,10 @@ class UserFirebaseDao(
                 .get().await()
             println("debug: UserFirebasedao getUser for email ${email} " +
                     "-> ${userRef.getValue(UserFirebase::class.java)}")
-            userRef.getValue(UserFirebase::class.java)
+            val user = userRef.getValue(UserFirebase::class.java)
+            // unsanitize the email
+            user?.email?.replace("(","@")?.replace(")",".")
+            user
         }
     }
     suspend fun addUser(user: UserFirebase){

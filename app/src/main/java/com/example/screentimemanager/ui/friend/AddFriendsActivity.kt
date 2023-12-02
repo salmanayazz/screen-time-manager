@@ -53,26 +53,30 @@ class AddFriendsActivity : AppCompatActivity() {
             override fun onKey(view: View?, keyCode: Int, event: KeyEvent?): Boolean {
                 if(event!!.action == KeyEvent.ACTION_DOWN
                     && keyCode == KeyEvent.KEYCODE_ENTER){
-                    val friend = null //userRepository.getUser(etSearchFriend.text.toString())
-                    /*if(friend != null){
-                        val builder = AlertDialog.Builder(this@AddFriendsActivity)
-                        builder.setTitle("Add friend")
-                        builder.setMessage("Do you want to add ${friend.firstName} ${friend.lastName}?")
-                        builder.setPositiveButton("Add"){
-                                _, _ -> {
-                            CoroutineScope(IO).launch {
-                                friendRepository.sendFriendRequest(friend.email)
+                    CoroutineScope(IO).launch {
+                        val friend = userRepository.getUser(etSearchFriend.text.toString())
+                        if (friend != null) {
+                            val builder = AlertDialog.Builder(this@AddFriendsActivity)
+                            builder.setTitle("Add friend")
+                            builder.setMessage("Do you want to add ${friend.firstName} ${friend.lastName}?")
+                            builder.setPositiveButton("Add") { _, _ ->
+                                run {
+                                    CoroutineScope(IO).launch {
+                                        friendRepository.sendFriendRequest(friend.email)
+                                    }
+                                }
+                            }
+                            builder.setNegativeButton("Cancel") { dialog, _ ->
+                                run {
+                                    dialog.dismiss()
+                                }
+                            }
+                            runOnUiThread() {
+                                val alertDialog: AlertDialog = builder.create()
+                                alertDialog.show()
                             }
                         }
-                        }
-                        builder.setNegativeButton("Cancel"){
-                                dialog, _ -> {
-                            dialog.dismiss()
-                        }
-                        }
-                        val alertDialog: AlertDialog = builder.create()
-                        alertDialog.show()
-                    }*/
+                    }
                     return true
                 }
                 return false
@@ -86,7 +90,10 @@ class AddFriendsActivity : AppCompatActivity() {
             requestFriendName = ArrayList()
             for(friend in friendRequests){
                 CoroutineScope(IO).launch {
-                    requestFriendName.add(userRepository.getUser(friend))
+                    println("friend: $friend")
+                    userRepository.getUser(friend)?.let {
+                        it1 -> requestFriendName.add(it1)
+                    }
                 }
             }
             adapter.clear()
