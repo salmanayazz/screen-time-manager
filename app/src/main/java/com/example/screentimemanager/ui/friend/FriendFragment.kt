@@ -14,6 +14,7 @@ import com.example.screentimemanager.R
 import com.example.screentimemanager.data.firebase.friend.FriendFirebaseDao
 import com.example.screentimemanager.data.firebase.usage.UsageFirebase
 import com.example.screentimemanager.data.firebase.usage.UsageFirebaseDao
+import com.example.screentimemanager.data.firebase.user.UserFirebase
 import com.example.screentimemanager.data.local.usage.UsageDao
 import com.example.screentimemanager.data.local.usage.UsageDatabase
 import com.example.screentimemanager.data.repository.FriendRepository
@@ -36,8 +37,7 @@ import java.util.Calendar
 class FriendFragment : Fragment() {
     private lateinit var btnAddFriend: FloatingActionButton
     private lateinit var friendList: ListView
-    private lateinit var friendViewModel: FriendViewModel
-    private lateinit var friends: ArrayList<Friend>
+    private lateinit var friends: ArrayList<String>
     private lateinit var leftArrow: TextView
     private lateinit var rightArrow: TextView
     private lateinit var displayDate: TextView
@@ -53,8 +53,6 @@ class FriendFragment : Fragment() {
 
     private lateinit var friendRepo: FriendRepository
     private lateinit var usageRepo: UsageRepository
-    private lateinit var friendDbList: List<String>
-
 
     private lateinit var firebaseAuth: FirebaseAuth
 
@@ -75,7 +73,6 @@ class FriendFragment : Fragment() {
         friends = ArrayList()
         val adapter = FriendListAdapter(requireActivity(), R.layout.layout_friend_list, friends)
         val ret = inflater.inflate(R.layout.fragment_friend, container, false)
-        friendViewModel = ViewModelProvider(requireActivity()).get(FriendViewModel::class.java)
         btnAddFriend = ret.findViewById(R.id.fab_addFriend)
         friendList = ret.findViewById(R.id.lv_friendList)
         leftArrow = ret.findViewById(R.id.tv_leftArrow)
@@ -87,7 +84,6 @@ class FriendFragment : Fragment() {
         month = calendar.get(Calendar.MONTH)
         year = calendar.get(Calendar.YEAR)
 
-        friendDbList = listOf()
         displayDate.text = "$day-$month-$year"
 
         usageDatabase = UsageDatabase.getInstance(requireActivity())
@@ -100,19 +96,16 @@ class FriendFragment : Fragment() {
 
         friendRepo.getFriendList()
 
-        friendRepo.friendList.observe(requireActivity()) {
-            friendDbList = it
-        }
-
         chart.columnChartData = generateColumnData()
 
         //friendList is to show the list view to list out friends
         friendList.adapter = adapter
 
-        friendViewModel.friends.observe(requireActivity()){
+        friendRepo.friendList.observe(requireActivity()){
+            friends = it as ArrayList<String>
             adapter.clear()
-            adapter.addAll(it)
-            friendList.adapter = adapter
+            adapter.addAll(friends)
+            adapter.notifyDataSetChanged()
         }
 
         //When clicking the left arrow, the date will change to the day before
@@ -161,13 +154,13 @@ class FriendFragment : Fragment() {
 
     //Generate histogram data for the graph
     private  fun generateColumnData(): ColumnChartData{
-        val numColumns = friendDbList.size
+        val numColumns = friends.size
         val columns = mutableListOf<Column>()
         val values = mutableListOf<SubcolumnValue>()
         CoroutineScope(IO).launch {
             for(i in 0 until numColumns){
                 values.clear()
-                val usages = usageFirebaseDao.getUsageData(friendDbList[i], day, month, year) as List<UsageFirebase>
+                val usages = usageFirebaseDao.getUsageData(friends[i], day, month, year) as List<UsageFirebase>
                 var totalUsage: Long = 0
                 for (usage in usages){
                     totalUsage += usage.usage

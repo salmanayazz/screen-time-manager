@@ -61,4 +61,12 @@ class FriendRequestListAdapter(private var context: Context, private var array: 
         return ret
     }
 
+    fun clear(){
+        array.clear()
+    }
+
+    fun addAll(arrayList: ArrayList<UserFirebase>){
+        array = arrayList
+    }
+
 }
