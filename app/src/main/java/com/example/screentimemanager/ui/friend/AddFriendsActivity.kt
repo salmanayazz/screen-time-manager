@@ -82,16 +82,16 @@ class AddFriendsActivity : AppCompatActivity() {
         friendRepository.getFriendRequestList()
         val adapter = FriendRequestListAdapter(this, requestFriendName)
         friendRepository.friendRequestList.observe(this){
-            CoroutineScope(IO).launch{
-                friendRequests = it as ArrayList<String>
-                requestFriendName = ArrayList()
-                for(friend in friendRequests){
+            friendRequests = it as ArrayList<String>
+            requestFriendName = ArrayList()
+            for(friend in friendRequests){
+                CoroutineScope(IO).launch {
                     requestFriendName.add(userRepository.getUser(friend))
                 }
-                adapter.clear()
-                adapter.addAll(requestFriendName)
-                adapter.notifyDataSetChanged()
             }
+            adapter.clear()
+            adapter.addAll(requestFriendName)
+            adapter.notifyDataSetChanged()
         }
         lvFriendRequest.adapter = adapter
 
