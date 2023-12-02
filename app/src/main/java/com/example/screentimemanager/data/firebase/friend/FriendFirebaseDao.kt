@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
@@ -34,61 +35,104 @@ open class FriendFirebaseDao(
      * updates the friendList live data variable
      */
     fun getFriendList() {
-        val friends: ArrayList<String> = ArrayList()
-        friendsRef.addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                for (receiver in snapshot.children) {
-                    for (sender in receiver.children) {
-                        if (receiver.key == userEmail || sender.key == userEmail) {
-                            // only return emails that have isRequest set to false
-                            val isRequest = sender.child(IS_REQUEST).getValue(Boolean::class.java) ?: true
-                            val friendEmail = sender.key
-                            if (!isRequest && friendEmail != null) {
-                                friends.add(friendEmail)
-                            }
-                        }
-                    }
-                }
-                _friendList.value = friends
+        friendsRef.addChildEventListener(object: ChildEventListener{
+            override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
+                //Will be triggered when added new friend request
+                updateFriendList(snapshot)
+            }
+
+            override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {
+                //Will be triggered when accepted friend request
+                updateFriendList(snapshot)
+            }
+
+            override fun onChildRemoved(snapshot: DataSnapshot) {
+                //Will be triggered when removed friend
+            }
+
+            override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {
+                //Do nothing
             }
 
             override fun onCancelled(error: DatabaseError) {
-                Log.i("getFriendRequestList() error", error.message)
+                Log.e("Database error on getFriendList()", error.message)
             }
+
         })
+    }
+
+    private fun updateFriendList(snapshot: DataSnapshot){
+        val friends: ArrayList<String> = ArrayList()
+        for (receiver in snapshot.children) {
+            for (sender in receiver.children) {
+                if (receiver.key == userEmail || sender.key == userEmail) {
+                    // only return emails that have isRequest set to false
+                    val isRequest = sender.child(IS_REQUEST).getValue(Boolean::class.java) ?: true
+                    var friendEmail: String? = null
+                    if(receiver.key == userEmail){
+                        friendEmail = sender.key
+                    }
+                    else{
+                        friendEmail = receiver.key
+                    }
+                    if (!isRequest && friendEmail != null) {
+                        friends.add(friendEmail)
+                    }
+                }
+            }
+        }
+        _friendList.value = friends
     }
 
     /**
      * updates the friendRequestList live data variable
      */
     fun getFriendRequestList() {
-        val requestSenderList: ArrayList<String> = ArrayList()
+        friendsRef.addChildEventListener(object: ChildEventListener{
+            override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
+                // Will be triggered when added a friend request
+                updateFriendRequestList(snapshot)
+            }
 
-        friendsRef.addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                for (receiver in snapshot.children) {
-                    println("FOUND A PERSON")
-                    if (receiver.key == userEmail) {
-                        println("FOUND PERSON")
-                        for (sender in receiver.children) {
-                            println("THERES A FRIEND")
-                            val isRequest = sender.child(IS_REQUEST).getValue(Boolean::class.java) ?: false
-                            val friendEmail = sender.key
-                            println("isRequest $isRequest")
-                            println("friendEmail $friendEmail")
-                            if (isRequest && friendEmail != null) {
-                                requestSenderList.add(friendEmail)
-                            }
-                        }
-                    }
-                }
-                _friendRequestList.value = requestSenderList
+            override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {
+                //Will be triggered when accepted friend request
+                updateFriendRequestList(snapshot)
+            }
+
+            override fun onChildRemoved(snapshot: DataSnapshot) {
+                //Will be triggered when removed friend
+            }
+
+            override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {
+                //Do nothing
             }
 
             override fun onCancelled(error: DatabaseError) {
-                Log.i("getFriendRequestList() error", error.message)
+                Log.e("Database error on getFriendRequestList()", error.message)
             }
+
         })
+    }
+
+    private fun updateFriendRequestList(snapshot: DataSnapshot){
+        val requestSenderList: ArrayList<String> = ArrayList()
+        for (receiver in snapshot.children) {
+            println("FOUND A PERSON")
+            if (receiver.key == userEmail) {
+                println("FOUND PERSON")
+                for (sender in receiver.children) {
+                    println("THERES A FRIEND")
+                    val isRequest = sender.child(IS_REQUEST).getValue(Boolean::class.java) ?: false
+                    val friendEmail = sender.key
+                    println("isRequest $isRequest")
+                    println("friendEmail $friendEmail")
+                    if (isRequest && friendEmail != null) {
+                        requestSenderList.add(friendEmail)
+                    }
+                }
+            }
+        }
+        _friendRequestList.value = requestSenderList
     }
 
 
