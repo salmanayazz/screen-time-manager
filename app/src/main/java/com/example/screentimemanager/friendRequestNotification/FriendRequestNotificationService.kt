@@ -3,7 +3,6 @@ package com.example.screentimemanager.friendRequestNotification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
-import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.util.Log
@@ -13,6 +12,11 @@ import com.example.screentimemanager.data.firebase.user.UserFirebase
 import com.example.screentimemanager.data.firebase.user.UserFirebaseDao
 import com.example.screentimemanager.data.repository.UserRepository
 import com.example.screentimemanager.ui.friend.AddFriendsActivity
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.ChildEventListener
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
@@ -31,6 +35,42 @@ class FriendRequestNotificationService(): FirebaseMessagingService() {
     private val CHANNEL_NAME = "channel name"
     private val NOTIFY_ID = 3
     private val REQUEST_CODE = 1
+
+    override fun onCreate() {
+        super.onCreate()
+        val userEmail: String = FirebaseAuth.getInstance().currentUser?.email?: "Not Logged In"
+        val sanitUserEmail = userEmail.replace("@", "(").replace(".", ")")
+        val friendsRef: DatabaseReference = firebaseRef.child("friends")
+        friendsRef.addChildEventListener(object: ChildEventListener{
+            override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
+                for(receiver in snapshot.children){
+                    for(sender in receiver.children){
+                        if(receiver.key == sanitUserEmail){
+                            val senderEmail = sender.key
+                            showFriendRequestNotification(senderEmail!!.replace("(", "@").replace(")", "."))
+                        }
+                    }
+                }
+            }
+
+            override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {
+                //Do nothing
+            }
+
+            override fun onChildRemoved(snapshot: DataSnapshot) {
+                //Do nothing
+            }
+
+            override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {
+                //Do nothing
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                //Do nothing
+            }
+
+        })
+    }
     override fun onNewToken(token: String) {
         Log.d(TAG, "Refreshed token: $token")
         CoroutineScope(IO).launch{
