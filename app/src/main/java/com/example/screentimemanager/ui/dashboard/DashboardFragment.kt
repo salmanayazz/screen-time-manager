@@ -8,8 +8,20 @@ import android.widget.Button
 import android.widget.EditText
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import com.example.screentimemanager.R
+import com.example.screentimemanager.data.firebase.friend.FriendFirebaseDao
+import com.example.screentimemanager.data.firebase.usage.UsageFirebase
+import com.example.screentimemanager.data.firebase.usage.UsageFirebaseDao
+import com.example.screentimemanager.data.local.usage.UsageDao
+import com.example.screentimemanager.data.local.usage.UsageDatabase
 import com.example.screentimemanager.databinding.FragmentDashboardBinding
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import lecho.lib.hellocharts.model.Axis
 import lecho.lib.hellocharts.model.AxisValue
 import lecho.lib.hellocharts.model.Column
@@ -17,9 +29,11 @@ import lecho.lib.hellocharts.model.ColumnChartData
 import lecho.lib.hellocharts.model.SubcolumnValue
 import lecho.lib.hellocharts.model.Viewport
 import lecho.lib.hellocharts.view.ColumnChartView
+import java.util.Calendar
+import java.util.Objects
 
 
-class DashboardFragment : Fragment() {
+class DashboardFragment : Fragment(){
 
     private var _binding: FragmentDashboardBinding? = null
 
@@ -29,6 +43,18 @@ class DashboardFragment : Fragment() {
     private lateinit var logInBtn: Button
     private lateinit var emailEditText: EditText
     private lateinit var passwordEditText: EditText
+
+    private lateinit var usageDatabase: UsageDatabase
+    private lateinit var usageDao: UsageDao
+
+    private lateinit var firebaseDatabaseRef: DatabaseReference
+    private lateinit var friendDao: FriendFirebaseDao
+    private lateinit var usageFirebaseDao: UsageFirebaseDao
+
+    private lateinit var calendar: Calendar
+    private var day = 1
+    private var month = 1
+    private var year = 2023
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -40,6 +66,15 @@ class DashboardFragment : Fragment() {
 
         _binding = FragmentDashboardBinding.inflate(inflater, container, false)
         val root: View = binding.root
+        usageDatabase = UsageDatabase.getInstance(requireActivity())
+        usageDao = usageDatabase.usageDao
+        firebaseDatabaseRef = FirebaseDatabase.getInstance().reference
+        usageFirebaseDao = UsageFirebaseDao(firebaseDatabaseRef)
+        calendar = Calendar.getInstance()
+        day = calendar.get(Calendar.DAY_OF_MONTH)
+        month = calendar.get(Calendar.MONTH)
+        year = calendar.get(Calendar.YEAR)
+        getData();
         val columnChartView: ColumnChartView = root.findViewById(R.id.chart)
         val columnChartData = generateColumnData()
         columnChartView.columnChartData = columnChartData
@@ -65,6 +100,30 @@ class DashboardFragment : Fragment() {
         columnChartView.currentViewport = viewport
         return root
     }
+    private fun getData() {
+        val firebaseAuth = FirebaseAuth.getInstance()
+        val user = firebaseAuth.currentUser
+        var usages: List<UsageFirebase>? = null
+
+        CoroutineScope(Dispatchers.IO).launch {
+            // Fetch data and assign it to the 'usages' variable
+            usages = user?.email?.let { usageFirebaseDao.getUsageData(it, day, month, year) }
+
+            // Now 'usages' is either the actual list or null, depending on the result of 'getUsageData'
+
+            // If you want to do something with 'usages', you can check if it's not null
+            usages?.let { list ->
+                var totalUsage: Long = 0
+                for (usage in list) {
+                    totalUsage += usage.usage
+                    print("Hello lolalal $totalUsage")
+                }
+
+                // Use totalUsage as needed (e.g., update UI)
+                print("Usage is here: $totalUsage")
+            }
+        }
+    }
 
     private fun generateColumnData(): ColumnChartData {
         val numColumns = 7
@@ -77,16 +136,12 @@ class DashboardFragment : Fragment() {
             val column = Column(values)
             columns.add(column.setHasLabels(true))
         }
-
         return ColumnChartData(columns)
     }
-
-
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
     }
-    data class ColumnValue(val value: Float, val color: Int)
 
 }

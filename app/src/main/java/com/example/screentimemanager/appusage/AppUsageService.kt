@@ -10,7 +10,6 @@ import android.app.usage.UsageStatsManager
 import android.content.ContentValues.TAG
 import android.content.Context
 import android.content.Intent
-import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.graphics.PixelFormat
 import android.os.Build
@@ -24,10 +23,7 @@ import android.view.WindowManager
 import com.example.screentimemanager.R
 import com.example.screentimemanager.data.firebase.app.AppFirebaseDao
 import com.example.screentimemanager.data.firebase.usage.UsageFirebaseDao
-import com.example.screentimemanager.data.local.app.AppDao
 import com.example.screentimemanager.data.local.app.AppDatabase
-import com.example.screentimemanager.data.local.usage.Usage
-import com.example.screentimemanager.data.local.usage.UsageDao
 import com.example.screentimemanager.data.local.usage.UsageDatabase
 import com.example.screentimemanager.data.repository.AppRepository
 import com.example.screentimemanager.data.repository.UsageRepository
@@ -37,12 +33,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.time.LocalDate
 import java.util.Calendar
 import java.util.SortedMap
-import java.util.TimeZone
 import java.util.Timer
 import java.util.TimerTask
 import java.util.TreeMap
