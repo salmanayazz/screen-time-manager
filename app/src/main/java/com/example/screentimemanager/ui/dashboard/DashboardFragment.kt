@@ -8,11 +8,10 @@ import android.widget.Button
 import android.widget.EditText
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.lifecycleScope
 import com.example.screentimemanager.R
 import com.example.screentimemanager.data.firebase.friend.FriendFirebaseDao
-import com.example.screentimemanager.data.firebase.usage.UsageFirebase
 import com.example.screentimemanager.data.firebase.usage.UsageFirebaseDao
+import com.example.screentimemanager.data.local.usage.Usage
 import com.example.screentimemanager.data.local.usage.UsageDao
 import com.example.screentimemanager.data.local.usage.UsageDatabase
 import com.example.screentimemanager.databinding.FragmentDashboardBinding
@@ -30,7 +29,6 @@ import lecho.lib.hellocharts.model.SubcolumnValue
 import lecho.lib.hellocharts.model.Viewport
 import lecho.lib.hellocharts.view.ColumnChartView
 import java.util.Calendar
-import java.util.Objects
 
 
 class DashboardFragment : Fragment(){
@@ -61,8 +59,7 @@ class DashboardFragment : Fragment(){
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val dashboardViewModel =
-            ViewModelProvider(this).get(DashboardViewModel::class.java)
+        val dashboardViewModel = ViewModelProvider(this).get(DashboardViewModel::class.java)
 
         _binding = FragmentDashboardBinding.inflate(inflater, container, false)
         val root: View = binding.root
@@ -74,6 +71,7 @@ class DashboardFragment : Fragment(){
         day = calendar.get(Calendar.DAY_OF_MONTH)
         month = calendar.get(Calendar.MONTH)
         year = calendar.get(Calendar.YEAR)
+        print("Hello patola")
         getData();
         val columnChartView: ColumnChartView = root.findViewById(R.id.chart)
         val columnChartData = generateColumnData()
@@ -101,29 +99,28 @@ class DashboardFragment : Fragment(){
         return root
     }
     private fun getData() {
-        val firebaseAuth = FirebaseAuth.getInstance()
-        val user = firebaseAuth.currentUser
-        var usages: List<UsageFirebase>? = null
+        var usages: List<Usage>? = null
+        print("Hello patola")
 
         CoroutineScope(Dispatchers.IO).launch {
             // Fetch data and assign it to the 'usages' variable
-            usages = user?.email?.let { usageFirebaseDao.getUsageData(it, day, month, year) }
-
-            // Now 'usages' is either the actual list or null, depending on the result of 'getUsageData'
-
-            // If you want to do something with 'usages', you can check if it's not null
+            usages = usageDao.getUsageData(day, month, year)
             usages?.let { list ->
                 var totalUsage: Long = 0
                 for (usage in list) {
                     totalUsage += usage.usage
-                    print("Hello lolalal $totalUsage")
                 }
-
-                // Use totalUsage as needed (e.g., update UI)
-                print("Usage is here: $totalUsage")
+                print("Here it is $usages")
             }
         }
+        usages?.let{
+            print("Usage is here: $usages")
+
+        }
+
+
     }
+
 
     private fun generateColumnData(): ColumnChartData {
         val numColumns = 7
