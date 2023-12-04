@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.os.Looper
 import android.util.Log
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.NumberPicker
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -50,16 +51,23 @@ open class AppSettingsActivity : AppCompatActivity() {
         // getting the application clicked
         application = intent.getParcelableExtraCompat(APPLICATION_INFO, ApplicationInfo::class.java)
 
+        val appIcon: ImageView = findViewById(R.id.app_icon)
+        val appName: TextView = findViewById(R.id.app_name)
+
+        appIcon.setImageDrawable(application?.loadIcon(packageManager))
+        appName.text = application?.loadLabel(packageManager).toString()
+        supportActionBar?.hide()
+
         _setupMVVM()
         setupUI()
         setupListeners()
     }
 
+
     /**
      * sets up the view model
      */
     private var _setupMVVM: () -> Unit = {
-        println("I have runned")
         val appDatabase = AppDatabase.getInstance(this)
         val firebaseDatabase = FirebaseDatabase.getInstance()
         val appFirebaseDao = AppFirebaseDao(firebaseDatabase.reference)
