@@ -12,8 +12,8 @@ class UserRepository(
      * @return
      * return the User object with the given username
      */
-    suspend fun getUser(username: String): UserFirebase {
-        return userFirebaseDao.getUser(username)!!
+    suspend fun getUser(username: String): UserFirebase? {
+        return userFirebaseDao.getUser(username)
     }
 
     suspend fun updateToken(token: String){
