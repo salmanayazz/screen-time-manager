@@ -23,9 +23,7 @@
             android:id="@+id/todays_usage"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="--:--"
-            android:textAlignment="center"
-            android:textSize="36sp"
+            android:textSize="28sp"
             android:paddingTop="8dp" />
 
         <com.google.android.material.switchmaterial.SwitchMaterial
