@@ -1,5 +1,10 @@
 package com.example.screentimemanager.ui.friend
 
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.Intent
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.text.Editable
@@ -12,14 +17,19 @@ import android.view.View.OnKeyListener
 import android.widget.EditText
 import android.widget.ListView
 import androidx.appcompat.app.AlertDialog
+import androidx.core.app.NotificationCompat
 import com.example.screentimemanager.R
 import com.example.screentimemanager.data.firebase.friend.FriendFirebaseDao
 import com.example.screentimemanager.data.firebase.user.UserFirebase
 import com.example.screentimemanager.data.firebase.user.UserFirebaseDao
 import com.example.screentimemanager.data.repository.FriendRepository
 import com.example.screentimemanager.data.repository.UserRepository
+import com.example.screentimemanager.friendRequestNotification.FriendRequestNotificationService
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.messaging.FirebaseMessaging
+import com.google.firebase.messaging.RemoteMessage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
@@ -34,6 +44,7 @@ class AddFriendsActivity : AppCompatActivity() {
     private lateinit var friendRepository: FriendRepository
     private lateinit var friendRequests: ArrayList<String>
     private lateinit var requestFriendName: ArrayList<UserFirebase>
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_friends)
@@ -63,6 +74,16 @@ class AddFriendsActivity : AppCompatActivity() {
                                 run {
                                     CoroutineScope(IO).launch {
                                         friendRepository.sendFriendRequest(friend.email)
+                                        val recipientToken = userRepository.getUser(friend.email)!!.token
+                                        val userEmail: String = FirebaseAuth.getInstance().currentUser?.email!!
+                                        val messageId = "${userEmail}_to_${friend.email}"
+                                        val message = RemoteMessage.Builder(recipientToken)
+                                            .setMessageId(messageId)
+                                            .addData("type", "friend_request")
+                                            .addData("senderEmail", "$userEmail")
+                                            .build()
+
+                                        FirebaseMessaging.getInstance().send(message)
                                     }
                                 }
                             }

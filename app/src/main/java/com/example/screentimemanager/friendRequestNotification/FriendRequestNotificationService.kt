@@ -3,6 +3,7 @@ package com.example.screentimemanager.friendRequestNotification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.util.Log
@@ -35,19 +36,21 @@ class FriendRequestNotificationService(): FirebaseMessagingService() {
     private val CHANNEL_NAME = "channel name"
     private val NOTIFY_ID = 3
     private val REQUEST_CODE = 1
-
+/*
     override fun onCreate() {
-        super.onCreate()
+        Log.i("angus: notification service", "onCreate() called")
         val userEmail: String = FirebaseAuth.getInstance().currentUser?.email?: "Not Logged In"
         val sanitUserEmail = userEmail.replace("@", "(").replace(".", ")")
         val friendsRef: DatabaseReference = firebaseRef.child("friends")
         friendsRef.addChildEventListener(object: ChildEventListener{
             override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
+                Log.i("angus: notification", "onChildAdded() being called")
                 for(receiver in snapshot.children){
                     for(sender in receiver.children){
                         if(receiver.key == sanitUserEmail){
-                            val senderEmail = sender.key
-                            showFriendRequestNotification(senderEmail!!.replace("(", "@").replace(")", "."))
+                            Log.i("angus: notification", "receiverEmail == userEmail")
+                            val senderEmail = sender.key!!.replace("(", "@").replace(")", ".")
+                            showFriendRequestNotification(senderEmail)
                         }
                     }
                 }
@@ -71,6 +74,7 @@ class FriendRequestNotificationService(): FirebaseMessagingService() {
 
         })
     }
+    */
     override fun onNewToken(token: String) {
         Log.d(TAG, "Refreshed token: $token")
         CoroutineScope(IO).launch{
@@ -82,7 +86,10 @@ class FriendRequestNotificationService(): FirebaseMessagingService() {
         message.data.isNotEmpty().let {
             if (message.data["type"] == "friend_request") {
                 val senderEmail = message.data["senderEmail"]
-                showFriendRequestNotification(senderEmail)
+                Log.i("angus: notification service", "senderEmail: $senderEmail")
+                if(senderEmail != null){
+                    showFriendRequestNotification(senderEmail)
+                }
             }
         }
     }
@@ -96,19 +103,23 @@ class FriendRequestNotificationService(): FirebaseMessagingService() {
         CoroutineScope(IO).launch{
             if(senderEmail != null){
                 sender = userRepository.getUser(senderEmail)
+                if(sender != null){
+                    notificationBuilder.setContentTitle("New Friend Request")
+                    notificationBuilder.setContentText("${sender!!.firstName} ${sender!!.lastName} has sent you a friend request")
+                    notificationBuilder.setSmallIcon(R.drawable.baseline_friend_24)
+                    notificationBuilder.setContentIntent(pendingIntent)
+                    notificationBuilder.setAutoCancel(false)
+                    val notification = notificationBuilder.build()
+                    if(Build.VERSION.SDK_INT > 26){
+                        val notificationChannel = NotificationChannel(CHANNEL_ID, CHANNEL_NAME, NotificationManager.IMPORTANCE_DEFAULT)
+                        notificationManager.createNotificationChannel(notificationChannel)
+                    }
+                    notificationManager.notify(NOTIFY_ID, notification)
+                }
+                else{
+                    Log.e("angus: notification service", "sender not found")
+                }
             }
         }
-
-        notificationBuilder.setContentTitle("New Friend Request")
-        notificationBuilder.setContentText("${sender!!.firstName} ${sender!!.lastName} has sent you a friend request")
-        notificationBuilder.setSmallIcon(R.drawable.baseline_friend_24)
-        notificationBuilder.setContentIntent(pendingIntent)
-        notificationBuilder.setAutoCancel(false)
-        val notification = notificationBuilder.build()
-        if(Build.VERSION.SDK_INT > 26){
-            val notificationChannel = NotificationChannel(CHANNEL_ID, CHANNEL_NAME, NotificationManager.IMPORTANCE_DEFAULT)
-            notificationManager.createNotificationChannel(notificationChannel)
-        }
-        notificationManager.notify(NOTIFY_ID, notification)
     }
 }
