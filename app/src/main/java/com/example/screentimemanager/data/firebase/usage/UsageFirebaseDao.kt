@@ -4,6 +4,8 @@ import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 
@@ -65,6 +67,60 @@ class UsageFirebaseDao(private val database: DatabaseReference) {
             Log.d(TAG, "Setting usage data for $sanitizedEmail on $day/$month/$year")
         } catch (e: Exception) {
             Log.e(TAG, "Error setting usage data: ${e.message}")
+        }
+    }
+
+    /**
+     * Fetches the list of friends' emails for a given user.
+     * @param userEmail The email of the user whose friends are to be fetched.
+     * @return A list of sanitized email strings of the user's friends.
+     */
+    suspend fun getFriendsEmails(userEmail: String): List<String> {
+        return withContext(Dispatchers.IO) {
+            val sanitizedUserEmail = userEmail.replace("@", "(").replace(".", ")")
+            val friendsRef = database.child("friends").child(sanitizedUserEmail)
+            val snapshot = friendsRef.get().await()
+            val friendsEmails = mutableListOf<String>()
+
+            snapshot.children.forEach { childSnapshot ->
+                val isRequest = childSnapshot.child("request").getValue(Boolean::class.java) ?: false
+                if (!isRequest) {
+                    val friendEmail = childSnapshot.key
+                    friendEmail?.let { friendsEmails.add(it) }
+                }
+            }
+
+            friendsEmails
+        }
+    }
+
+    /**
+     * Retrieves usage data for a given user on a specific date.
+     * @param email Email of the user.
+     * @param day The day of the month.
+     * @param month The month of the year.
+     * @param year The year.
+     * @return A list of UsageFirebase objects representing the usage data.
+     */
+    suspend fun getUserUsageDataOnDate(email: String, day: Int, month: Int, year: Int): List<UsageFirebase> {
+        return withContext(Dispatchers.IO) {
+            val sanitizedEmail = email.replace("@", "(").replace(".", ")")
+            val dateUsageRef = usageRef.child(sanitizedEmail)
+                .child(year.toString()).child(month.toString()).child(day.toString())
+            val snapshot = dateUsageRef.get().await()
+
+            val usageDataList = mutableListOf<UsageFirebase>()
+
+            snapshot.children.forEach { appSnapshot ->
+                val appName = appSnapshot.key
+                val usage = appSnapshot.child("usage").getValue(Long::class.java)
+                if (appName != null && usage != null) {
+                    val usageData = UsageFirebase(email, appName, day, month, year, usage)
+                    usageDataList.add(usageData)
+                }
+            }
+
+            usageDataList
         }
     }
 
