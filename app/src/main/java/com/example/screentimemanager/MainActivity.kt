@@ -22,6 +22,7 @@ import com.example.screentimemanager.data.firebase.user.UserFirebaseDao
 import com.example.screentimemanager.databinding.ActivityMainBinding
 import com.example.screentimemanager.friendRequestNotification.FriendRequestNotificationService
 import com.example.screentimemanager.ui.authentication.Login
+import com.example.screentimemanager.ui.profileSetting.ProfileSetting
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.navigation.NavigationView
 import com.google.firebase.auth.FirebaseAuth
@@ -43,6 +44,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var menuName: TextView
     private lateinit var menuEmail: TextView
     private lateinit var signOutBtn: Button
+    private lateinit var settingBtn: Button
     private lateinit var exitBtn:Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -75,10 +77,16 @@ class MainActivity : AppCompatActivity() {
         navigationView = findViewById(R.id.navigation_view)
         menuName = findViewById(R.id.nav_header_user_name)
         menuEmail = findViewById(R.id.nav_header_email)
+        settingBtn = findViewById(R.id.swipe_setting_btn)
         signOutBtn = findViewById(R.id.signout_btn_menu)
         exitBtn = findViewById(R.id.exit_btn_menu)
 
 
+
+        settingBtn.setOnClickListener{
+            var intent:Intent= Intent(this,ProfileSetting::class.java)
+            startActivity(intent)
+        }
         signOutBtn.setOnClickListener{
             onSignOutListener()
         }

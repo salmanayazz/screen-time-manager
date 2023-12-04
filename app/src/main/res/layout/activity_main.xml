@@ -112,6 +112,7 @@
                 >
                 <Button
                     android:clickable="true"
+                    android:id="@+id/swipe_setting_btn"
                     android:drawableLeft="@drawable/baseline_settings_24"
                     android:drawablePadding="5dp"
                     android:textColor="@color/white"
@@ -120,7 +121,7 @@
                     android:background="#00000000"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Setting"/>
+                    android:text="Profile Setting"/>
                 <Button
                     android:id="@+id/signout_btn_menu"
                     android:clickable="true"

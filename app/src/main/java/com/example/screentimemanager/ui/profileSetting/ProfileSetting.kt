@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import com.example.screentimemanager.MainActivity
 import com.example.screentimemanager.R
 import com.example.screentimemanager.data.firebase.user.UserFirebase
@@ -72,7 +73,14 @@ class ProfileSetting : AppCompatActivity() {
             // delete the current user from authentication db
             currentUser.delete()
             // also delete the current user from the user db
-
+            GlobalScope.launch {
+                userFirebaseDao.deleteUser(email = currentUser.email!!)
+            }
+            Toast.makeText(this,"Account deleted!",Toast.LENGTH_SHORT).show()
+            // go back to main page
+            val intent: Intent = Intent(this, MainActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
+            startActivity(intent)
         }
     }
 
@@ -101,9 +109,8 @@ class ProfileSetting : AppCompatActivity() {
             var currentUser = firebaseAuth.currentUser!!
             // Reset the password
             firebaseAuth.sendPasswordResetEmail(currentUser.email!!)
-
+            Toast.makeText(this,"Reset password email is sent!",Toast.LENGTH_SHORT).show()
             firebaseAuth.signOut()
-
             // go back to main page
             val intent: Intent = Intent(this, MainActivity::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
