@@ -232,7 +232,7 @@ class AppUsageService : Service() {
         val channel = NotificationChannel(
             CHANNEL_ID,
             CHANNEL_ID,
-            NotificationManager.IMPORTANCE_HIGH
+            NotificationManager.IMPORTANCE_LOW
         )
 
         getSystemService(NotificationManager::class.java).createNotificationChannel(channel)

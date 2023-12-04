@@ -191,6 +191,18 @@ class FriendFragment : Fragment() {
             val entries = mutableListOf<BarEntry>()
             val labels = mutableListOf<String>()
 
+            // add data for user
+            val usages = usageRepo.getUsageData(day, month + 1, year)
+            var totalUsage: Long = 0
+            for (usage in usages){
+                totalUsage += usage.usage
+            }
+            // convert usage from millisecs to mins
+            val mins = totalUsage.toFloat() / (1000 * 60)
+            entries.add(BarEntry(0F, mins, "You"))
+            labels.add("You")
+
+            // add data for friends
             for(i in 0 until numColumns){
                 val usages = usageFirebaseDao.getUsageData(friends[i], day, month + 1, year)
                 val user = userRepository.getUser(friends[i])
@@ -201,7 +213,7 @@ class FriendFragment : Fragment() {
                 }
                 // convert usage from millisecs to mins
                 val mins = totalUsage.toFloat() / (1000 * 60)
-                entries.add(BarEntry(i.toFloat(), mins, friends[i]))
+                entries.add(BarEntry((i + 1).toFloat(), mins, friends[i]))
                 labels.add("${user?.firstName} ${user?.lastName}")
             }
 

@@ -160,13 +160,18 @@ class FriendInfoDialog : DialogFragment() {
             }
 
             val (hours, mins) = Util.millisecToHoursAndMins(totalUsage)
-            val formattedHours = String.format("%02d", hours)
-            val formattedMinutes = String.format("%02d", mins)
 
             CoroutineScope(Main).launch {
                 if (friend != null) {
-                    friendInfo.text = "${friend.firstName} ${friend.lastName}'s total usage:\n" +
-                            "$formattedHours:$formattedMinutes on $day/$month/$year"
+                    var text = "${friend.firstName} ${friend.lastName}'s total usage:\n"
+
+                    text += "$hours hour"
+                    if (hours != 1) { text += "s"}
+                    text += ", $mins minute"
+                    if (mins != 1) { text += "s"}
+
+                    text += " on $day/$month/$year"
+                    friendInfo.text = text
                 }
             }
 

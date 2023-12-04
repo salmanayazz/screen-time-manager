@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.os.Looper
 import android.util.Log
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.NumberPicker
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -18,6 +19,7 @@ import com.example.screentimemanager.data.local.usage.UsageDatabase
 import com.example.screentimemanager.data.repository.AppRepository
 import com.example.screentimemanager.data.repository.UsageRepository
 import com.example.screentimemanager.util.Compat.getParcelableExtraCompat
+import com.example.screentimemanager.util.Util
 
 import com.google.android.material.switchmaterial.SwitchMaterial
 import com.google.firebase.database.FirebaseDatabase
@@ -49,16 +51,23 @@ open class AppSettingsActivity : AppCompatActivity() {
         // getting the application clicked
         application = intent.getParcelableExtraCompat(APPLICATION_INFO, ApplicationInfo::class.java)
 
+        val appIcon: ImageView = findViewById(R.id.app_icon)
+        val appName: TextView = findViewById(R.id.app_name)
+
+        appIcon.setImageDrawable(application?.loadIcon(packageManager))
+        appName.text = application?.loadLabel(packageManager).toString()
+        supportActionBar?.hide()
+
         _setupMVVM()
         setupUI()
         setupListeners()
     }
 
+
     /**
      * sets up the view model
      */
     private var _setupMVVM: () -> Unit = {
-        println("I have runned")
         val appDatabase = AppDatabase.getInstance(this)
         val firebaseDatabase = FirebaseDatabase.getInstance()
         val appFirebaseDao = AppFirebaseDao(firebaseDatabase.reference)
@@ -103,15 +112,16 @@ open class AppSettingsActivity : AppCompatActivity() {
         CoroutineScope(IO).launch {
             // set the app usage data
             val usageMillisec = appSettingsViewModel.getAppUsage(application!!.packageName)
-            val hoursUsage = (usageMillisec / (1000 * 60 * 60))
-            val minutesUsage = (usageMillisec / (1000 * 60)) - (hoursUsage * 60)
+            val (hours, mins) = Util.millisecToHoursAndMins(usageMillisec)
 
-            val formattedHours = String.format("%02d", hoursUsage)
-            val formattedMinutes = String.format("%02d", minutesUsage)
-
-            // update UI on the main thread
+    
             runOnUiThread {
-                todaysUsage.text = "$formattedHours : $formattedMinutes"
+                var text = "$hours hour"
+                if (hours != 1) { text += "s"}
+                text += ", $mins minute"
+                if (mins != 1) { text += "s"}
+
+                todaysUsage.text = text
             }
 
             // set the number pickers to the previous time limit the user picked
@@ -119,7 +129,6 @@ open class AppSettingsActivity : AppCompatActivity() {
             val hoursLimit = (appData.timeLimit / (1000 * 60 * 60))
             val minutesLimit = (appData.timeLimit / (1000 * 60)) - (hoursLimit * 60)
 
-            // update UI on the main thread
             runOnUiThread {
                 hourSelector.value = hoursLimit.toInt()
                 minuteSelector.value = minutesLimit.toInt()
