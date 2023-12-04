@@ -115,9 +115,10 @@ class UsageFirebaseDao(private val database: DatabaseReference) {
 
             snapshot.children.forEach { appSnapshot ->
                 val appName = appSnapshot.key
+                val appLabel = appSnapshot.child("appLabel").getValue(String::class.java).toString()
                 val usage = appSnapshot.child("usage").getValue(Long::class.java)
                 if (appName != null && usage != null) {
-                    val usageData = UsageFirebase(email, appName, day, month, year, usage)
+                    val usageData = UsageFirebase(email, appName,appLabel, day, month, year, usage)
                     usageDataList.add(usageData)
                 }
             }
