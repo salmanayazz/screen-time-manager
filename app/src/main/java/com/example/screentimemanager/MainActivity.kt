@@ -1,15 +1,17 @@
 package com.example.screentimemanager
 
+import android.Manifest
+import android.app.AlertDialog
+import android.app.AppOpsManager
+import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.view.View
+import android.provider.Settings
 import android.widget.Button
 import android.widget.TextView
-import com.google.android.material.bottomnavigation.BottomNavigationView
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
@@ -18,7 +20,9 @@ import com.example.screentimemanager.appusage.AppUsageService
 import com.example.screentimemanager.data.firebase.user.UserFirebase
 import com.example.screentimemanager.data.firebase.user.UserFirebaseDao
 import com.example.screentimemanager.databinding.ActivityMainBinding
+import com.example.screentimemanager.friendRequestNotification.FriendRequestNotificationService
 import com.example.screentimemanager.ui.authentication.Login
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.navigation.NavigationView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseReference
@@ -26,20 +30,7 @@ import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import android.Manifest
-import android.app.AlertDialog
-import android.app.AppOpsManager
-import android.content.Context
-import android.provider.Settings
-import android.util.Log
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.app.ActivityCompat
-import com.example.screentimemanager.data.repository.UserRepository
-import com.example.screentimemanager.friendRequestNotification.FriendRequestNotificationService
-import com.example.screentimemanager.ui.friend.FriendInfoDialog
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers.IO
-import kotlinx.coroutines.launch
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -99,13 +90,14 @@ class MainActivity : AppCompatActivity() {
         updateUserSwipeMenu()
         requestUsageServicePermissions()
 
-
         // start the AppUsageService
         val serviceIntent = Intent(this, AppUsageService::class.java)
         this.startForegroundService(serviceIntent)
 
         val notificationServiceIntent = Intent(this, FriendRequestNotificationService::class.java)
         startService(notificationServiceIntent)
+
+        showGestureNavigationWarning()
     }
 
 
@@ -197,6 +189,28 @@ class MainActivity : AppCompatActivity() {
         }
 
 
+    }
+
+    /**
+     * shows a warning on first book asking the user to switch to button navigation
+     */
+    private fun showGestureNavigationWarning() {
+        val sharedPref = getSharedPreferences("gesture-control-warning", 0)
+        val dialogShown = sharedPref.getBoolean("dialogShown", false)
+
+        if (!dialogShown) {
+
+            AlertDialog.Builder(this)
+                .setTitle("Gesture Control")
+                .setMessage("Our app tracking will not work reliably if you are using gesture based navigation. Please switch to button based navigation instead.")
+                .setPositiveButton("Got it", null)
+                .show()
+
+
+            val editor = sharedPref.edit()
+            editor.putBoolean("dialogShown", true)
+            editor.apply()
+        }
     }
 
 }
