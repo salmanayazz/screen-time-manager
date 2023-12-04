@@ -1,9 +1,13 @@
-package com.example.screentimemanager.usageComparison
+package com.example.screentimemanager.usageComparisonService
 
+import android.util.Log
 import com.example.screentimemanager.data.firebase.usage.UsageFirebase
 import com.example.screentimemanager.data.firebase.usage.UsageFirebaseDao
+import com.example.screentimemanager.data.firebase.user.UserFirebaseDao
 
-class UsageComparisonManager(private val usageFirebaseDao: UsageFirebaseDao) {
+class UsageComparisonManager(private val usageFirebaseDao: UsageFirebaseDao,
+                             private val userFirebaseDao: UserFirebaseDao,
+) {
 
     suspend fun fetchUserUsageData(userEmail: String, day: Int, month: Int, year: Int): List<UsageFirebase>
     {
@@ -58,6 +62,36 @@ class UsageComparisonManager(private val usageFirebaseDao: UsageFirebaseDao) {
         return aggregatedData
     }
 
+
+
+    suspend fun findLowestUsageUserAndFormatMessage(userEmail: String, day: Int, month: Int, year: Int): String {
+        // Fetch and aggregate usage data
+        val aggregatedData = compileAndAggregateUsageData(userEmail, day, month, year)
+
+        // Log all the inputs
+        Log.d("UsageComparisonManager", "Notification Inputs for findLowestUsageUserAndFormat $userEmail, $day, $month, $year");
+        if (aggregatedData.isEmpty()) {
+            return "No usage data available for today."
+        }
+        val (lowestUsageUserEmail, usageTime) = aggregatedData.minByOrNull { it.value } ?: return "No usage data available."
+
+        Log.d("UsageComparisonManager", "Notification lowestUsageUserEmail: $lowestUsageUserEmail and usageTime: $usageTime");
+        // Fetch the first name of the user with the lowest usage
+        val user = userFirebaseDao.getUser(lowestUsageUserEmail)
+        val firstName = user?.firstName ?: "User"
+        
+        // Convert usage time to hours and minutes
+        val hours = usageTime / (60 * 60 * 1000)
+        val minutes = (usageTime % (60 * 60 * 1000)) / (60 * 1000)
+        val finalMessage = if (hours > 0) {
+            "$firstName got the lowest usage time today by only using $hours hours and $minutes minutes."
+        } else {
+            "$firstName got the lowest usage time today by only using $minutes minutes."
+        }
+        Log.d("UsageComparisonManager", "Notification finalMessage: $finalMessage");
+        // Format the message based on the usage time
+        return finalMessage
+    }
 
 
 }

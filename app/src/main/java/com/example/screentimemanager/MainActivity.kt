@@ -8,6 +8,7 @@ import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.util.Log
 import android.widget.Button
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
@@ -16,12 +17,18 @@ import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.workDataOf
 import com.example.screentimemanager.appusage.AppUsageService
+import com.example.screentimemanager.data.firebase.usage.UsageFirebaseDao
 import com.example.screentimemanager.data.firebase.user.UserFirebase
 import com.example.screentimemanager.data.firebase.user.UserFirebaseDao
 import com.example.screentimemanager.databinding.ActivityMainBinding
 import com.example.screentimemanager.friendRequestNotification.FriendRequestNotificationService
 import com.example.screentimemanager.ui.authentication.Login
+import com.example.screentimemanager.usageComparisonService.UsageComparisonManager
+import com.example.screentimemanager.workers.UsageNotificationWorker
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.navigation.NavigationView
 import com.google.firebase.auth.FirebaseAuth
@@ -30,6 +37,7 @@ import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import java.util.concurrent.TimeUnit
 
 
 class MainActivity : AppCompatActivity() {
@@ -38,6 +46,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var firebaseAuth: FirebaseAuth
     private lateinit var databaseReference: DatabaseReference
     private lateinit var userFirebaseDao: UserFirebaseDao
+    private lateinit var usageFirebaseDao: UsageFirebaseDao
+    private lateinit var usageComparisonManager: UsageComparisonManager
 
     private lateinit var navigationView: NavigationView
     private lateinit var menuName: TextView
@@ -54,6 +64,7 @@ class MainActivity : AppCompatActivity() {
         askNotificationPermission()
 
         val navView: BottomNavigationView = binding.navView
+        scheduleUsageNotification()
 
         val navController = findNavController(R.id.nav_host_fragment_activity_main)
         // Passing each menu ID as a set of Ids because each
@@ -70,6 +81,13 @@ class MainActivity : AppCompatActivity() {
         firebaseAuth = FirebaseAuth.getInstance()
         databaseReference = FirebaseDatabase.getInstance().reference
         userFirebaseDao = UserFirebaseDao(databaseReference)
+        usageFirebaseDao = UsageFirebaseDao(databaseReference)
+        usageComparisonManager = UsageComparisonManager(usageFirebaseDao, userFirebaseDao)
+
+        // a seperate dispatcher to call usage comparison method
+        GlobalScope.launch(Dispatchers.IO) {
+            println( usageComparisonManager.findLowestUsageUserAndFormatMessage("abcd123@gmail.com", 2, 12, 2023));
+        }
 
         // setting up the swipe bar menu
         navigationView = findViewById(R.id.navigation_view)
@@ -108,6 +126,27 @@ class MainActivity : AppCompatActivity() {
 
     private fun onSignInListener(){
         startActivity(Intent(this, Login::class.java))
+    }
+
+    private fun scheduleUsageNotification() {
+        // Optionally, get the currently logged-in user's email
+        var userEmail = FirebaseAuth.getInstance().currentUser?.email
+
+        // Create a WorkRequest for your UsageNotificationWorker
+        val notificationWorkRequest = OneTimeWorkRequestBuilder<UsageNotificationWorker>()
+            .apply {
+                // Set initial delay for the worker to run
+                setInitialDelay(2, TimeUnit.SECONDS) // Example: 5 minutes delay
+
+                // If you have the user email, pass it as input data
+                if (userEmail != null) {
+                    setInputData(workDataOf("userEmail" to userEmail))
+                }
+            }
+            .build()
+        Log.d("MainActivity", "In the main activity, after creating notification request. Sending notification: $userEmail")
+        // Enqueue the WorkRequest with WorkManager
+        WorkManager.getInstance(this).enqueue(notificationWorkRequest)
     }
 
     private fun updateUserSwipeMenu(){

@@ -44,6 +44,7 @@ dependencies {
     implementation("androidx.core:core-ktx:1.9.0")
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("com.google.android.material:material:1.10.0")
+    implementation("androidx.work:work-runtime-ktx:2.7.0")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.6.2")
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.2")
@@ -57,7 +58,7 @@ dependencies {
     implementation("com.github.lecho:hellocharts-library:1.5.8")
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
 
-    // local room db
+    // local room db version
     val room_version = "2.6.0"
     implementation("androidx.room:room-ktx:$room_version")
     kapt("androidx.room:room-compiler:$room_version")
