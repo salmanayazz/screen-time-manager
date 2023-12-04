@@ -8,12 +8,8 @@
     <FrameLayout
         android:id="@+id/reg_banner_layout"
         android:layout_width="match_parent"
-        android:layout_height="200dp">
-        <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:scaleType="fitXY"
-            android:src="@drawable/login_background_header"/>
+        android:background="@drawable/layout_gradient_shape"
+        android:layout_height="150dp">
         <ImageView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -23,7 +19,8 @@
     </FrameLayout>
     <LinearLayout
         android:id="@+id/reg_form_container"
-        android:layout_marginTop="30dp"
+        android:layout_marginTop="-20dp"
+        android:background="@drawable/rounded_layout_shape"
         android:layout_below="@id/reg_banner_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

@@ -1,11 +1,16 @@
 package com.example.screentimemanager
 
+import android.Manifest
+import android.app.AlertDialog
+import android.app.AppOpsManager
+import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
-import android.view.View
+import android.provider.Settings
 import android.widget.Button
 import android.widget.TextView
-import com.google.android.material.bottomnavigation.BottomNavigationView
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
@@ -15,7 +20,9 @@ import com.example.screentimemanager.appusage.AppUsageService
 import com.example.screentimemanager.data.firebase.user.UserFirebase
 import com.example.screentimemanager.data.firebase.user.UserFirebaseDao
 import com.example.screentimemanager.databinding.ActivityMainBinding
+import com.example.screentimemanager.friendRequestNotification.FriendRequestNotificationService
 import com.example.screentimemanager.ui.authentication.Login
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.navigation.NavigationView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseReference
@@ -24,6 +31,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
+
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
@@ -31,17 +39,19 @@ class MainActivity : AppCompatActivity() {
     private lateinit var databaseReference: DatabaseReference
     private lateinit var userFirebaseDao: UserFirebaseDao
 
-
     private lateinit var navigationView: NavigationView
     private lateinit var menuName: TextView
     private lateinit var menuEmail: TextView
     private lateinit var signOutBtn: Button
     private lateinit var exitBtn:Button
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        askNotificationPermission()
 
         val navView: BottomNavigationView = binding.navView
 
@@ -78,11 +88,16 @@ class MainActivity : AppCompatActivity() {
 
         // update the user information on swipe menu
         updateUserSwipeMenu()
-
+        requestUsageServicePermissions()
 
         // start the AppUsageService
         val serviceIntent = Intent(this, AppUsageService::class.java)
         this.startForegroundService(serviceIntent)
+
+        val notificationServiceIntent = Intent(this, FriendRequestNotificationService::class.java)
+        startService(notificationServiceIntent)
+
+        showGestureNavigationWarning()
     }
 
 
@@ -117,4 +132,85 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+
+    // request notification permissions
+    private fun askNotificationPermission() {
+
+        val notificationPermissionLauncher =
+            registerForActivityResult(
+                ActivityResultContracts.RequestPermission()
+            ) { }
+
+        notificationPermissionLauncher.launch(
+            Manifest.permission.POST_NOTIFICATIONS
+        )
+    }
+
+    /**
+     * requests the permissions needed for the service to work
+     * includes the usage access permission and the overlay permission
+     */
+    private fun requestUsageServicePermissions() {
+        // check if overlay permission is granted
+        if (!Settings.canDrawOverlays(this)) {
+            val overlayIntent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION)
+            overlayIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+
+            AlertDialog.Builder(this)
+                .setTitle("Overlay Permission Required")
+                .setMessage("This app requires the Overlay permission. Please locate the app in the next screen and grant it.")
+                .setPositiveButton("OK") { _, _ ->
+                    startActivity(overlayIntent)
+                }
+                .setNegativeButton("Cancel", null)
+                .show()
+        }
+
+        // check if usage access permission is granted
+        val appOps = getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
+        val mode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            appOps.unsafeCheckOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS, android.os.Process.myUid(), packageName)
+        } else {
+            @Suppress("DEPRECATION")
+            appOps.checkOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS, android.os.Process.myUid(), packageName)
+        }
+        if (mode != AppOpsManager.MODE_ALLOWED) {
+            val usageAccessIntent = Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)
+            usageAccessIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+
+            AlertDialog.Builder(this)
+                .setTitle("Usage Access Permission Required")
+                .setMessage("This app requires the Usage Access permission. Please locate the app in the next screen and grant it.")
+                .setPositiveButton("OK") { _, _ ->
+                    startActivity(usageAccessIntent)
+                }
+                .setNegativeButton("Cancel", null)
+                .show()
+        }
+
+
+    }
+
+    /**
+     * shows a warning on first book asking the user to switch to button navigation
+     */
+    private fun showGestureNavigationWarning() {
+        val sharedPref = getSharedPreferences("gesture-control-warning", 0)
+        val dialogShown = sharedPref.getBoolean("dialogShown", false)
+
+        if (!dialogShown) {
+
+            AlertDialog.Builder(this)
+                .setTitle("Gesture Control")
+                .setMessage("Our app tracking will not work reliably if you are using gesture based navigation. Please switch to button based navigation instead.")
+                .setPositiveButton("Got it", null)
+                .show()
+
+
+            val editor = sharedPref.edit()
+            editor.putBoolean("dialogShown", true)
+            editor.apply()
+        }
+    }
+
 }

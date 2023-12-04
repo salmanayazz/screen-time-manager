@@ -58,7 +58,6 @@ class AppUsageService : Service() {
         if (!isServiceRunning) {
             isServiceRunning = true
 
-            requestPermissions()
             setupRepo()
             startAppTracking()
 
@@ -92,24 +91,7 @@ class AppUsageService : Service() {
         usageRepository = UsageRepository(usageFirebaseDao, usageDao)
     }
 
-    /**
-     * requests the permissions needed for the service to work
-     * includes the usage access permission and the overlay permission
-     */
-    private fun requestPermissions() {
-        if (!isUsageAccessPermissionGranted()) {
-            var intent = Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            startActivity(intent)
-        }
 
-
-        if (!Settings.canDrawOverlays(this)) {
-            val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION)
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            startActivity(intent)
-        }
-    }
 
     /**
      * tracker that checks if the time limit for the current app is reached continuously
@@ -184,8 +166,11 @@ class AppUsageService : Service() {
 
         // if no usage data for current day, create it
         if (appUsage == null) {
+            val packetManager = applicationContext.packageManager
+            val appInfo = packetManager.getApplicationInfo(currentApp, 0)
+            val appLabel = packetManager.getApplicationLabel(appInfo).toString()
             CoroutineScope(IO).launch {
-                usageRepository.setUsageData(currentApp, day, month, year, 0)
+                usageRepository.setUsageData(currentApp, appLabel, day, month, year, 0)
             }
         }
 
@@ -223,7 +208,10 @@ class AppUsageService : Service() {
                 appRepository.addApp(appName)
             }
             // save usage value
-            usageRepository.setUsageData(appName, day, month, year, usageTime)
+            val packetManager = applicationContext.packageManager
+            val appInfo = packetManager.getApplicationInfo(appName, 0)
+            val appLabel = packetManager.getApplicationLabel(appInfo).toString()
+            usageRepository.setUsageData(appName, appLabel, day, month, year, usageTime)
         }
     }
 
@@ -237,7 +225,7 @@ class AppUsageService : Service() {
         val channel = NotificationChannel(
             CHANNEL_ID,
             CHANNEL_ID,
-            NotificationManager.IMPORTANCE_HIGH
+            NotificationManager.IMPORTANCE_LOW
         )
 
         getSystemService(NotificationManager::class.java).createNotificationChannel(channel)

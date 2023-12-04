@@ -14,6 +14,7 @@ import com.example.screentimemanager.data.firebase.user.UserFirebaseDao
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
@@ -65,15 +66,20 @@ class Register : AppCompatActivity() {
         }else{
             firebaseAuth.createUserWithEmailAndPassword(email,password).addOnCompleteListener{
                 if(it.isSuccessful){
-                    user= UserFirebase(email,fName,lName,password,null)
-                    GlobalScope.launch {
-                        userFirebaseDao.addUser(user)
+                    // get token for FMS
+                    FirebaseMessaging.getInstance().token.addOnSuccessListener { token ->
+                        user = UserFirebase(email, fName, lName, password, null, token)
+                        GlobalScope.launch {
+                            userFirebaseDao.addUser(user)
+                        }
+                        Toast.makeText(this, "Logged In", Toast.LENGTH_SHORT).show()
+                        val intent = Intent(this, MainActivity::class.java)
+                        intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
+                        intent.putExtra("isFriendTab", true)
+                        startActivity(intent)
+                    }.addOnFailureListener {
+                        Toast.makeText(this, "Failed to create account", Toast.LENGTH_SHORT).show()
                     }
-                    Toast.makeText(this,"Logged In", Toast.LENGTH_SHORT).show()
-                    val intent = Intent(this, MainActivity::class.java)
-                    intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
-                    intent.putExtra("isFriendTab", true)
-                    startActivity(intent)
                 }
                 else{
                     Toast.makeText(this,"Failed to create account", Toast.LENGTH_SHORT).show()

@@ -57,8 +57,7 @@ dependencies {
     implementation("com.google.android.gms:play-services-maps:18.2.0")
     implementation ("com.google.code.gson:gson:2.8.2")
     implementation("com.github.lecho:hellocharts-library:1.5.8")
-    implementation ("androidx.lifecycle:lifecycle-viewmodel-ktx:2.4.0")
-
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
     // local room db
     val room_version = "2.6.0"
     implementation("androidx.room:room-ktx:$room_version")
@@ -70,6 +69,8 @@ dependencies {
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
     implementation(platform("com.google.firebase:firebase-bom:32.6.0"))
+    implementation("com.google.firebase:firebase-analytics")
+    implementation("com.google.firebase:firebase-messaging-ktx:23.3.1")
 
     // testing
     testImplementation("junit:junit:4.13.2")
