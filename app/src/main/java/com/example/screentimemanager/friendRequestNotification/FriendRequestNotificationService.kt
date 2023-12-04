@@ -36,7 +36,9 @@ class FriendRequestNotificationService(): FirebaseMessagingService() {
     private val CHANNEL_NAME = "channel name"
     private val NOTIFY_ID = 3
     private val REQUEST_CODE = 1
-/*
+    private val IS_REQUEST = "request"
+    private val SENDER_EMAIL = "senderEmail"
+    private val RECEIVER_EMAIL = "receiverEmail"
     override fun onCreate() {
         Log.i("angus: notification service", "onCreate() called")
         val userEmail: String = FirebaseAuth.getInstance().currentUser?.email?: "Not Logged In"
@@ -44,13 +46,14 @@ class FriendRequestNotificationService(): FirebaseMessagingService() {
         val friendsRef: DatabaseReference = firebaseRef.child("friends")
         friendsRef.addChildEventListener(object: ChildEventListener{
             override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
-                Log.i("angus: notification", "onChildAdded() being called")
                 for(receiver in snapshot.children){
                     for(sender in receiver.children){
-                        if(receiver.key == sanitUserEmail){
+                        val receiverEmail = snapshot.key
+                        val senderEmail = receiver.key
+                        if(receiverEmail == sanitUserEmail){
                             Log.i("angus: notification", "receiverEmail == userEmail")
-                            val senderEmail = sender.key!!.replace("(", "@").replace(")", ".")
-                            showFriendRequestNotification(senderEmail)
+                            val unsanitSenderEmail = senderEmail!!.replace("(", "@").replace(")", ".")
+                            showFriendRequestNotification(unsanitSenderEmail)
                         }
                     }
                 }
@@ -74,7 +77,6 @@ class FriendRequestNotificationService(): FirebaseMessagingService() {
 
         })
     }
-    */
     override fun onNewToken(token: String) {
         Log.d(TAG, "Refreshed token: $token")
         CoroutineScope(IO).launch{
@@ -83,6 +85,7 @@ class FriendRequestNotificationService(): FirebaseMessagingService() {
     }
 
     override fun onMessageReceived(message: RemoteMessage) {
+        Log.i("angus: notification service", "onMessageReceived() called")
         message.data.isNotEmpty().let {
             if (message.data["type"] == "friend_request") {
                 val senderEmail = message.data["senderEmail"]
@@ -95,6 +98,7 @@ class FriendRequestNotificationService(): FirebaseMessagingService() {
     }
 
     private fun showFriendRequestNotification(senderEmail: String?){
+        Log.i("angus: notification service", "notification() senderEmail: $senderEmail")
         notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         val notificationBuilder = NotificationCompat.Builder(this, CHANNEL_ID) //(Context, channelId: String)
         val intent = Intent(applicationContext, AddFriendsActivity::class.java)

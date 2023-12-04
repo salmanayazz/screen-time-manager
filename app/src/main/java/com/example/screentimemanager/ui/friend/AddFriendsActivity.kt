@@ -74,16 +74,18 @@ class AddFriendsActivity : AppCompatActivity() {
                                 run {
                                     CoroutineScope(IO).launch {
                                         friendRepository.sendFriendRequest(friend.email)
+                                        /*
                                         val recipientToken = userRepository.getUser(friend.email)!!.token
                                         val userEmail: String = FirebaseAuth.getInstance().currentUser?.email!!
                                         val messageId = "${userEmail}_to_${friend.email}"
                                         val message = RemoteMessage.Builder(recipientToken)
                                             .setMessageId(messageId)
                                             .addData("type", "friend_request")
-                                            .addData("senderEmail", "$userEmail")
+                                            .addData("senderEmail", userEmail)
                                             .build()
 
                                         FirebaseMessaging.getInstance().send(message)
+                                        */
                                     }
                                 }
                             }
