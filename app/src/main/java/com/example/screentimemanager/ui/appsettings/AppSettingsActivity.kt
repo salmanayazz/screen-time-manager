@@ -3,7 +3,6 @@ package com.example.screentimemanager.ui.appsettings
 import android.content.ContentValues.TAG
 import android.content.pm.ApplicationInfo
 import android.os.Bundle
-import android.os.Looper
 import android.util.Log
 import android.widget.Button
 import android.widget.ImageView
@@ -24,10 +23,8 @@ import com.example.screentimemanager.util.Util
 import com.google.android.material.switchmaterial.SwitchMaterial
 import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 open class AppSettingsActivity : AppCompatActivity() {
     companion object {
