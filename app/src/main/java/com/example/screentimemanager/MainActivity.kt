@@ -35,6 +35,7 @@ import android.util.Log
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
 import com.example.screentimemanager.data.repository.UserRepository
+import com.example.screentimemanager.friendRequestNotification.FriendRequestNotificationService
 import com.example.screentimemanager.ui.friend.FriendInfoDialog
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
@@ -53,7 +54,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var signOutBtn: Button
     private lateinit var exitBtn:Button
 
-    private val PERMISSION_REQUEST_CODE = 0
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -103,6 +103,9 @@ class MainActivity : AppCompatActivity() {
         // start the AppUsageService
         val serviceIntent = Intent(this, AppUsageService::class.java)
         this.startForegroundService(serviceIntent)
+
+        val notificationServiceIntent = Intent(this, FriendRequestNotificationService::class.java)
+        startService(notificationServiceIntent)
     }
 
 
