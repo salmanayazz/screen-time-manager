@@ -72,23 +72,21 @@ class UsageFirebaseDao(private val database: DatabaseReference) {
         }
     }
 
-    /**
-     * Fetches the list of friends' emails for a given user.
-     * @param userEmail The email of the user whose friends are to be fetched.
-     * @return A list of sanitized email strings of the user's friends.
-     */
     suspend fun getFriendsEmails(userEmail: String): List<String> {
         return withContext(Dispatchers.IO) {
             val sanitizedUserEmail = userEmail.replace("@", "(").replace(".", ")")
-            val friendsRef = database.child("friends").child(sanitizedUserEmail)
+            val friendsRef = database.child("friends")
             val snapshot = friendsRef.get().await()
             val friendsEmails = mutableListOf<String>()
 
             snapshot.children.forEach { childSnapshot ->
-                val isRequest = childSnapshot.child("request").getValue(Boolean::class.java) ?: false
-                if (!isRequest) {
-                    val friendEmail = childSnapshot.key
-                    friendEmail?.let { friendsEmails.add(it) }
+                childSnapshot.children.forEach { innerChild ->
+                    if ((childSnapshot.key == sanitizedUserEmail || innerChild.key == sanitizedUserEmail) && !(innerChild.child("request").getValue(Boolean::class.java) ?: true)) {
+                        val friendEmail = if (childSnapshot.key == sanitizedUserEmail) innerChild.key else childSnapshot.key
+                        friendEmail?.let { sanitizedEmail ->
+                            friendsEmails.add(sanitizedEmail.replace("(", "@").replace(")", "."))
+                        }
+                    }
                 }
             }
 

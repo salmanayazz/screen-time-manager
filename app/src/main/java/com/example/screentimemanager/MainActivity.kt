@@ -84,11 +84,6 @@ class MainActivity : AppCompatActivity() {
         usageFirebaseDao = UsageFirebaseDao(databaseReference)
         usageComparisonManager = UsageComparisonManager(usageFirebaseDao, userFirebaseDao)
 
-        // a seperate dispatcher to call usage comparison method
-        GlobalScope.launch(Dispatchers.IO) {
-            println( usageComparisonManager.findLowestUsageUserAndFormatMessage("abcd123@gmail.com", 2, 12, 2023));
-        }
-
         // setting up the swipe bar menu
         navigationView = findViewById(R.id.navigation_view)
         menuName = findViewById(R.id.nav_header_user_name)

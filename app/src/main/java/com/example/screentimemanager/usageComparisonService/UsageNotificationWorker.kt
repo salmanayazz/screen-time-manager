@@ -31,7 +31,7 @@ class UsageNotificationWorker(
         val inputDataEmail = inputData.getString("userEmail")
 
         // Fallback to the currently logged-in user's email if inputDataEmail is not available
-        val userEmail = inputDataEmail ?:"abc123@gmail.com"
+        val userEmail = inputDataEmail ?:"abcd123@gmail.com"
 
         // If userEmail is still null, return failure
         if (userEmail == null) {
@@ -41,7 +41,8 @@ class UsageNotificationWorker(
 
         val c = Calendar.getInstance()
         val year = c.get(Calendar.YEAR)
-        val month = c.get(Calendar.MONTH)
+        val month = c.get(Calendar.MONTH)+1
+        Log.d("UsageNotificationWorker", "The month is $month")
         val day = c.get(Calendar.DAY_OF_MONTH)
         val message = userEmail?.let {
             usageComparisonManager.findLowestUsageUserAndFormatMessage(
@@ -61,26 +62,31 @@ class UsageNotificationWorker(
     }
 
     private fun createAndSendNotification(message: String) {
-        val notificationManager = applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        if(message != "No friends to compare."){
+            val notificationManager = applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-        // Create Notification Channel for API 26+
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            val channel = NotificationChannel("usage_stats_channel", "Usage Stats", NotificationManager.IMPORTANCE_DEFAULT).apply {
-                description = "Notification channel for usage stats"
+            // Create Notification Channel for API 26+
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                val channel = NotificationChannel("usage_stats_channel", "Usage Stats", NotificationManager.IMPORTANCE_DEFAULT).apply {
+                    description = "Notification channel for usage stats"
+                }
+                notificationManager.createNotificationChannel(channel)
             }
-            notificationManager.createNotificationChannel(channel)
+
+
+
+            // Build the notification
+            val notification = NotificationCompat.Builder(applicationContext, "usage_stats_channel")
+                .setContentTitle("Daily Usage Stats")
+                .setContentText(message)
+                .setStyle(NotificationCompat.BigTextStyle().bigText(message))
+                .setSmallIcon(R.drawable.baseline_email_24)
+                .build()
+
+            // Send the notification
+            notificationManager.notify(7721, notification)
+            Log.d("UsageNotificationWorker", "In the worker class, after sending message. Sending notification: $message")
         }
-
-        // Build the notification
-        val notification = NotificationCompat.Builder(applicationContext, "usage_stats_channel")
-            .setContentTitle("Daily Usage Summary")
-            .setContentText(message)
-            .setSmallIcon(R.drawable.baseline_email_24)
-            .build()
-
-        // Send the notification
-        notificationManager.notify(7721, notification)
-        Log.d("UsageNotificationWorker", "In the worker class, after sending message. Sending notification: $message")
     }
 
 }

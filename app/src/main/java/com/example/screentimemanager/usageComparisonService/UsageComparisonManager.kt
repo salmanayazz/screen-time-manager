@@ -62,36 +62,55 @@ class UsageComparisonManager(private val usageFirebaseDao: UsageFirebaseDao,
         return aggregatedData
     }
 
-
-
     suspend fun findLowestUsageUserAndFormatMessage(userEmail: String, day: Int, month: Int, year: Int): String {
         // Fetch and aggregate usage data
         val aggregatedData = compileAndAggregateUsageData(userEmail, day, month, year)
 
-        // Log all the inputs
-        Log.d("UsageComparisonManager", "Notification Inputs for findLowestUsageUserAndFormat $userEmail, $day, $month, $year");
-        if (aggregatedData.isEmpty()) {
-            return "No usage data available for today."
+        // Check if the user has friends
+        if (aggregatedData.size <= 1) {
+            return "No friends to compare."
         }
+
         val (lowestUsageUserEmail, usageTime) = aggregatedData.minByOrNull { it.value } ?: return "No usage data available."
 
-        Log.d("UsageComparisonManager", "Notification lowestUsageUserEmail: $lowestUsageUserEmail and usageTime: $usageTime");
-        // Fetch the first name of the user with the lowest usage
+        // Fetch the user details
         val user = userFirebaseDao.getUser(lowestUsageUserEmail)
-        val firstName = user?.firstName ?: "User"
-        
+        val fullName = "${user?.firstName ?: ""} ${user?.lastName ?: ""}".trim()
+
+        // Check if the current user has the lowest usage time
+        if (lowestUsageUserEmail == userEmail) {
+            return "Congrats! You had the lowest screen time among your friends on ${formatDate(day, month, year)}."
+        }
+
+        // Format the date
+        val formattedDate = formatDate(day, month, year)
+
         // Convert usage time to hours and minutes
         val hours = usageTime / (60 * 60 * 1000)
         val minutes = (usageTime % (60 * 60 * 1000)) / (60 * 1000)
-        val finalMessage = if (hours > 0) {
-            "$firstName got the lowest usage time today by only using $hours hours and $minutes minutes."
+
+        return if (hours > 0) {
+            "Your friend $fullName had the lowest usage time among your friends on $formattedDate by only using $hours hours and $minutes minutes."
         } else {
-            "$firstName got the lowest usage time today by only using $minutes minutes."
+            "Your friend $fullName had the lowest usage time among your friends on $formattedDate by only using $minutes minutes."
         }
-        Log.d("UsageComparisonManager", "Notification finalMessage: $finalMessage");
-        // Format the message based on the usage time
-        return finalMessage
     }
+
+    private fun formatDate(day: Int, month: Int, year: Int): String {
+        // Format the date as needed, for example "April 5, 2023"
+        // Note: Month is 0-indexed, so you may need to add 1.
+        val monthName = getMonthName(month)
+        Log.d("UsageComparisonManager", "Month name: $monthName")
+        return "$monthName $day, $year"
+    }
+
+    private fun getMonthName(monthIndex: Int): String {
+        // Convert month index to month name
+        // This is a simplistic approach; consider using DateFormat for localization
+        val months = arrayOf("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December")
+        return months.getOrElse(monthIndex-1) { "Unknown" }
+    }
+
 
 
 }
