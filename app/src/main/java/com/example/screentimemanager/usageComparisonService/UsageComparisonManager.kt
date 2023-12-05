@@ -9,8 +9,7 @@ class UsageComparisonManager(private val usageFirebaseDao: UsageFirebaseDao,
                              private val userFirebaseDao: UserFirebaseDao,
 ) {
 
-    suspend fun fetchUserUsageData(userEmail: String, day: Int, month: Int, year: Int): List<UsageFirebase>
-    {
+    suspend fun fetchUserUsageData(userEmail: String, day: Int, month: Int, year: Int): List<UsageFirebase> {
         return usageFirebaseDao.getUsageData(userEmail, day, month, year)
     }
 
@@ -29,7 +28,6 @@ class UsageComparisonManager(private val usageFirebaseDao: UsageFirebaseDao,
         return friendsUsageData
     }
 
-
     fun aggregateUsageData(usageData: Map<String, List<UsageFirebase>>): Map<String, Long> {
         val aggregatedData = mutableMapOf<String, Long>()
 
@@ -40,7 +38,6 @@ class UsageComparisonManager(private val usageFirebaseDao: UsageFirebaseDao,
 
         return aggregatedData
     }
-
 
     suspend fun compileAndAggregateUsageData(userEmail: String, day: Int, month: Int, year: Int): Map<String, Long> {
         val usageData = mutableMapOf<String, List<UsageFirebase>>()
@@ -110,7 +107,5 @@ class UsageComparisonManager(private val usageFirebaseDao: UsageFirebaseDao,
         val months = arrayOf("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December")
         return months.getOrElse(monthIndex-1) { "Unknown" }
     }
-
-
 
 }

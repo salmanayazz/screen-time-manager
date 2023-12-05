@@ -73,8 +73,6 @@ class UsageNotificationWorker(
                 notificationManager.createNotificationChannel(channel)
             }
 
-
-
             // Build the notification
             val notification = NotificationCompat.Builder(applicationContext, "usage_stats_channel")
                 .setContentTitle("Daily Usage Stats")

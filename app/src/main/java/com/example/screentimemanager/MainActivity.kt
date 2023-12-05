@@ -28,6 +28,7 @@ import com.example.screentimemanager.databinding.ActivityMainBinding
 import com.example.screentimemanager.friendRequestNotification.FriendRequestNotificationService
 import com.example.screentimemanager.ui.authentication.Login
 import com.example.screentimemanager.usageComparisonService.UsageComparisonManager
+import com.example.screentimemanager.usageComparisonService.UsageComparisonNotificationScheduler
 import com.example.screentimemanager.workers.UsageNotificationWorker
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.navigation.NavigationView
@@ -64,7 +65,11 @@ class MainActivity : AppCompatActivity() {
         askNotificationPermission()
 
         val navView: BottomNavigationView = binding.navView
-        scheduleUsageNotification()
+        val userEmail = FirebaseAuth.getInstance().currentUser?.email
+        if (userEmail != null) {
+            val scheduler = UsageComparisonNotificationScheduler(this)
+            scheduler.scheduleUsageNotificationWorker(userEmail)
+        }
 
         val navController = findNavController(R.id.nav_host_fragment_activity_main)
         // Passing each menu ID as a set of Ids because each
@@ -121,27 +126,6 @@ class MainActivity : AppCompatActivity() {
 
     private fun onSignInListener(){
         startActivity(Intent(this, Login::class.java))
-    }
-
-    private fun scheduleUsageNotification() {
-        // Optionally, get the currently logged-in user's email
-        var userEmail = FirebaseAuth.getInstance().currentUser?.email
-
-        // Create a WorkRequest for your UsageNotificationWorker
-        val notificationWorkRequest = OneTimeWorkRequestBuilder<UsageNotificationWorker>()
-            .apply {
-                // Set initial delay for the worker to run
-                setInitialDelay(2, TimeUnit.SECONDS) // Example: 5 minutes delay
-
-                // If you have the user email, pass it as input data
-                if (userEmail != null) {
-                    setInputData(workDataOf("userEmail" to userEmail))
-                }
-            }
-            .build()
-        Log.d("MainActivity", "In the main activity, after creating notification request. Sending notification: $userEmail")
-        // Enqueue the WorkRequest with WorkManager
-        WorkManager.getInstance(this).enqueue(notificationWorkRequest)
     }
 
     private fun updateUserSwipeMenu(){
