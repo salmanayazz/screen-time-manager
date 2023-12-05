@@ -1,5 +1,6 @@
 package com.example.screentimemanager.ui.authentication
 
+import android.content.Context
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -7,9 +8,11 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
+import androidx.work.WorkManager
 import com.example.screentimemanager.MainActivity
 import com.example.screentimemanager.R
 import com.example.screentimemanager.data.firebase.user.UserFirebaseDao
+import com.example.screentimemanager.usageComparisonService.UsageComparisonNotificationScheduler
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
@@ -52,10 +55,15 @@ class Login : AppCompatActivity() {
             firebaseAuth.signInWithEmailAndPassword(email,password).addOnCompleteListener{
                 if(it.isSuccessful){
                     Toast.makeText(this,"Logged In",Toast.LENGTH_SHORT).show()
+                    // Reset notification setup
+                    resetNotificationSetup()
 
+                    // Schedule new notification
+                    scheduleNewNotification()
                     val intent = Intent(this, MainActivity::class.java)
                     intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
                     intent.putExtra("isFriendTab", true)
+
                     startActivity(intent)
                 }
                 else{
@@ -64,4 +72,26 @@ class Login : AppCompatActivity() {
             }
         }
     }
+
+    private fun resetNotificationSetup() {
+        // Cancel any existing notification work
+        WorkManager.getInstance(this).cancelUniqueWork("daily_usage_notification")
+
+        // Reset shared preference value
+        val sharedPreferences = getSharedPreferences("NotificationPrefs", Context.MODE_PRIVATE)
+        with(sharedPreferences.edit()) {
+            remove("lastScheduledDate")
+            apply()
+        }
+    }
+
+    private fun scheduleNewNotification() {
+        // Assume you have a method to schedule notifications
+        val userEmail = FirebaseAuth.getInstance().currentUser?.email
+        if (userEmail != null) {
+            val scheduler = UsageComparisonNotificationScheduler(this)
+            scheduler.scheduleUsageNotificationWorker(userEmail)
+        }
+    }
+
 }

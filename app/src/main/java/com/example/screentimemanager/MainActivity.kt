@@ -8,6 +8,7 @@ import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.util.Log
 import android.widget.Button
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
@@ -16,12 +17,19 @@ import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.workDataOf
 import com.example.screentimemanager.appusage.AppUsageService
+import com.example.screentimemanager.data.firebase.usage.UsageFirebaseDao
 import com.example.screentimemanager.data.firebase.user.UserFirebase
 import com.example.screentimemanager.data.firebase.user.UserFirebaseDao
 import com.example.screentimemanager.databinding.ActivityMainBinding
 import com.example.screentimemanager.friendRequestNotification.FriendRequestNotificationService
 import com.example.screentimemanager.ui.authentication.Login
+import com.example.screentimemanager.usageComparisonService.UsageComparisonManager
+import com.example.screentimemanager.usageComparisonService.UsageComparisonNotificationScheduler
+import com.example.screentimemanager.workers.UsageNotificationWorker
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.navigation.NavigationView
 import com.google.firebase.auth.FirebaseAuth
@@ -30,6 +38,7 @@ import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import java.util.concurrent.TimeUnit
 
 
 class MainActivity : AppCompatActivity() {
@@ -38,6 +47,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var firebaseAuth: FirebaseAuth
     private lateinit var databaseReference: DatabaseReference
     private lateinit var userFirebaseDao: UserFirebaseDao
+    private lateinit var usageFirebaseDao: UsageFirebaseDao
+    private lateinit var usageComparisonManager: UsageComparisonManager
 
     private lateinit var navigationView: NavigationView
     private lateinit var menuName: TextView
@@ -54,6 +65,11 @@ class MainActivity : AppCompatActivity() {
         askNotificationPermission()
 
         val navView: BottomNavigationView = binding.navView
+        val userEmail = FirebaseAuth.getInstance().currentUser?.email
+        if (userEmail != null) {
+            val scheduler = UsageComparisonNotificationScheduler(this)
+            scheduler.scheduleUsageNotificationWorker(userEmail)
+        }
 
         val navController = findNavController(R.id.nav_host_fragment_activity_main)
         // Passing each menu ID as a set of Ids because each
@@ -70,6 +86,8 @@ class MainActivity : AppCompatActivity() {
         firebaseAuth = FirebaseAuth.getInstance()
         databaseReference = FirebaseDatabase.getInstance().reference
         userFirebaseDao = UserFirebaseDao(databaseReference)
+        usageFirebaseDao = UsageFirebaseDao(databaseReference)
+        usageComparisonManager = UsageComparisonManager(usageFirebaseDao, userFirebaseDao)
 
         // setting up the swipe bar menu
         navigationView = findViewById(R.id.navigation_view)
